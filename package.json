@@ -17,6 +17,7 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "@autoai-ui/autoui": "^0.1.10",
     "@next/third-parties": "^16.0.7",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-collapsible": "^1.1.12",
