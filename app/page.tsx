@@ -3,13 +3,18 @@ import { Link } from "lib/transition"
 
 import { PageRoutes } from "@/lib/pageroutes"
 import { buttonVariants } from "@/components/ui/button"
-import { ModalChat } from "@autoai-ui/autoui"
+// import { ModalChat } from "@autoai-ui/autoui"
 import { AutoUIConfig } from "@autoai-ui/autoui"
+import dynamic from "next/dynamic";
 
+const ModalChat = dynamic(
+  () => import("@autoai-ui/autoui").then(m => m.ModalChat),
+  { ssr: false }   // <- very important
+);
 export default function Home() {
-  const apiKey = process.env.NEXT_OPENROUTER_API_KEY;
-const aiModel = process.env.NEXT_AIMODEL_NAME || 'openai/gpt-5-chat';
-const baseUrl = process.env.NEXT_BASE_URL;
+  const apiKey = process.env.NEXT_PUBLIC_OPENROUTER_API_KEY
+const aiModel = process.env.NEXT_PUBLIC_AIMODEL_NAME || 'openai/gpt-5-chat';
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
 const autouiConfig: AutoUIConfig = {
   /* =========================
    *   METADATA
@@ -66,17 +71,13 @@ const autouiConfig: AutoUIConfig = {
   components: {
     CartSummary: {
       prompt: 'Shows cart items with quantities and total; triggers checkout when requested.',
-      props: {
-        items: 'CartItem[] — { id, name, price, quantity } lines to display in cart',
-        onCheckout: 'function() — proceed to checkout',
-      },
       defaults: {
         items: [
           { id: '1', name: 'Beige Coat', price: 89.99, quantity: 2 },
           { id: '2', name: 'Denim Jacket', price: 69.99, quantity: 1 },
         ],
       },
-      callComponent: (props) => <div>Cart Summary Component</div>,
+      callComponent: () => <div>Cart Summary Component</div>,
       category: 'checkout',
     },
   }
