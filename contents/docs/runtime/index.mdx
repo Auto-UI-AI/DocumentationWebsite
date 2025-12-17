@@ -1,0 +1,355 @@
+---
+title: Runtime & Debugging
+description: Understand AUTOUI runtime behavior, debugging options, error handling, and execution limits.
+keywords: ["runtime", "debugging", "validateLLMOutput", "maxSteps", "error handling", "localStorage"]
+---
+
+The AUTOUI runtime orchestrates plan execution, manages conversation state, and handles errors. Understanding runtime behavior is crucial for debugging and optimizing your integration.
+
+## Runtime Overview
+
+The runtime:
+1. Receives plans (structured JSON) from the LLM
+2. Validates plan structure (if enabled)
+3. Executes steps in order (function calls, component renders)
+4. Collects results and sends context back to the LLM
+5. Handles errors and retries
+6. Manages conversation state and persistence
+
+## Configuration
+
+Runtime behavior is controlled by the `runtime` section of your config:
+
+```tsx
+runtime: {
+  validateLLMOutput: true,
+  storeChatToLocalStorage: true,
+  localStorageKey: 'autoui_chat',
+  enableDebugLogs: true,
+  maxSteps: 20,
+  errorHandling: {
+    showToUser: true,
+    retryOnFail: false,
+  },
+}
+```
+
+## validateLLMOutput
+
+Validates that the LLM returns properly structured plan JSON.
+
+```tsx
+validateLLMOutput: true
+```
+
+**What it does:**
+- Checks that the response is valid JSON
+- Validates plan structure (steps, actions, parameters)
+- Rejects malformed plans before execution
+
+**When to enable:**
+- **Always in production** to prevent execution errors
+- Useful during development to catch LLM output issues early
+
+**When to disable:**
+- Only if you're debugging LLM output format issues
+- Not recommended for production
+
+<Note title="Validation Errors" type="warning">
+If validation fails, the runtime will log an error and ask the LLM to retry with a corrected plan format.
+</Note>
+
+## storeChatToLocalStorage
+
+Persists conversation history in the browser's localStorage.
+
+```tsx
+storeChatToLocalStorage: true
+localStorageKey: 'autoui_chat'
+```
+
+**What it stores:**
+- Conversation messages (user and assistant)
+- Plan execution history
+- Function call results
+- Component render states
+
+**Benefits:**
+- Chat history persists across page reloads
+- Users can continue conversations
+- Useful for debugging (inspect stored state)
+
+**Considerations:**
+- localStorage has size limits (~5-10MB)
+- Sensitive data may be stored (be mindful of privacy)
+- Clear localStorage if you change config structure
+
+<Note title="Privacy" type="warning">
+Chat history may contain sensitive information. Consider:
+- Encrypting stored data
+- Providing a "clear history" option
+- Complying with data privacy regulations
+</Note>
+
+## enableDebugLogs
+
+Logs detailed execution information to the browser console.
+
+```tsx
+enableDebugLogs: true
+```
+
+**What gets logged:**
+- Incoming plans from LLM
+- Function call parameters and results
+- Component render props
+- Error messages and stack traces
+- Execution timing
+
+**Example console output:**
+
+```
+[AUTOUI] Plan received: { steps: [...] }
+[AUTOUI] Executing step 1: callFunction('createTask', { draft: {...} })
+[AUTOUI] Function result: { id: '123', title: '...' }
+[AUTOUI] Executing step 2: renderComponent('TaskCard', { task: {...} })
+[AUTOUI] Plan execution complete
+```
+
+**When to enable:**
+- During development and debugging
+- When troubleshooting execution issues
+- When optimizing performance
+
+**When to disable:**
+- In production (to reduce console noise)
+- When performance is critical
+
+## maxSteps
+
+Limits the number of steps in a single plan execution.
+
+```tsx
+maxSteps: 20
+```
+
+**Purpose:**
+- Prevents infinite loops
+- Limits execution time
+- Controls resource usage
+
+**How it works:**
+- Each function call or component render counts as one step
+- If a plan exceeds `maxSteps`, execution stops
+- The runtime returns an error to the LLM
+
+**Choosing a value:**
+- **Simple apps**: 5-10 steps
+- **Medium complexity**: 10-20 steps
+- **Complex workflows**: 20-50 steps
+- **Very complex**: 50+ steps (use with caution)
+
+<Note title="Infinite Loops" type="danger">
+If the LLM generates plans that call functions recursively without termination, `maxSteps` will stop execution. Review your function prompts to avoid recursive patterns.
+</Note>
+
+## errorHandling
+
+Controls how errors are displayed and handled.
+
+```tsx
+errorHandling: {
+  showToUser: true,
+  retryOnFail: false,
+}
+```
+
+### showToUser
+
+Whether to display error messages in the chat UI.
+
+```tsx
+showToUser: true
+```
+
+**When enabled:**
+- Errors are shown as chat messages
+- Users see what went wrong
+- Useful for debugging and transparency
+
+**When disabled:**
+- Errors are only logged to console
+- Users see generic "something went wrong" messages
+- Better for production (hides technical details)
+
+### retryOnFail
+
+Whether to automatically retry failed function calls.
+
+```tsx
+retryOnFail: false
+```
+
+**When enabled:**
+- Failed function calls are retried once
+- Useful for transient errors (network, API timeouts)
+- May cause duplicate operations
+
+**When disabled:**
+- Errors stop execution immediately
+- LLM can decide to retry in the next turn
+- More predictable behavior
+
+<Note title="Retry Safety" type="warning">
+Only enable `retryOnFail` for idempotent operations. Retrying non-idempotent functions (like creating a record) may cause duplicates.
+</Note>
+
+## Debugging Workflow
+
+### 1. Enable Debug Logs
+
+```tsx
+runtime: {
+  enableDebugLogs: true,
+}
+```
+
+### 2. Open Browser Console
+
+Open DevTools (F12) and check the Console tab for AUTOUI logs.
+
+### 3. Inspect Plans
+
+Look for `[AUTOUI] Plan received` logs to see what the LLM is generating.
+
+### 4. Check Function Calls
+
+Verify function parameters and return values:
+
+```
+[AUTOUI] Executing step 1: callFunction('createTask', { draft: {...} })
+[AUTOUI] Function result: { id: '123', ... }
+```
+
+### 5. Review Errors
+
+Check for error messages and stack traces:
+
+```
+[AUTOUI] Error: Task not found
+[AUTOUI] Stack: ...
+```
+
+### 6. Inspect localStorage
+
+Check stored conversation state:
+
+```javascript
+// In browser console
+const stored = localStorage.getItem('autoui_chat')
+console.log(JSON.parse(stored))
+```
+
+## Common Issues
+
+### Plan Validation Fails
+
+**Symptom:** `[AUTOUI] Plan validation failed`
+
+**Causes:**
+- LLM returned malformed JSON
+- Plan structure doesn't match expected format
+- Network issues corrupted response
+
+**Solutions:**
+- Check LLM response in network tab
+- Verify `validateLLMOutput` is enabled
+- Review LLM provider status
+- Check proxy server logs
+
+### Function Execution Fails
+
+**Symptom:** `[AUTOUI] Error executing function: ...`
+
+**Causes:**
+- Function threw an exception
+- Invalid parameters passed
+- Missing dependencies or state
+
+**Solutions:**
+- Check function implementation
+- Verify parameters match function signature
+- Add error handling in functions
+- Check console for detailed error messages
+
+### maxSteps Exceeded
+
+**Symptom:** `[AUTOUI] Plan exceeded maxSteps limit`
+
+**Causes:**
+- Plan has too many steps
+- Infinite loop in function calls
+- LLM generating overly complex plans
+
+**Solutions:**
+- Increase `maxSteps` (if appropriate)
+- Review function prompts to avoid recursion
+- Simplify component structure
+- Break complex operations into smaller functions
+
+### localStorage Quota Exceeded
+
+**Symptom:** `QuotaExceededError` in console
+
+**Causes:**
+- Chat history too large
+- Too many stored conversations
+- localStorage near capacity
+
+**Solutions:**
+- Clear old chat history
+- Reduce `storeChatToLocalStorage` scope
+- Implement history cleanup
+- Use sessionStorage instead (cleared on tab close)
+
+## Performance Optimization
+
+### Reduce Debug Logging
+
+```tsx
+runtime: {
+  enableDebugLogs: false, // Disable in production
+}
+```
+
+### Limit Conversation History
+
+Implement history cleanup:
+
+```tsx
+// Clear old messages periodically
+if (chatHistory.length > 100) {
+  chatHistory = chatHistory.slice(-50) // Keep last 50 messages
+}
+```
+
+### Optimize Function Calls
+
+- Cache expensive operations
+- Batch multiple operations
+- Use async functions for I/O
+
+### Monitor Execution Time
+
+Check console logs for timing information:
+
+```
+[AUTOUI] Plan execution time: 234ms
+```
+
+## Next Steps
+
+- Learn about functions: [Functions](/docs/functions)
+- Explore components: [Components](/docs/components)
+- Troubleshoot issues: [Troubleshooting](/docs/troubleshooting)
+

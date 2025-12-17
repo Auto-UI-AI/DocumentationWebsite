@@ -3,7 +3,6 @@ import { Link } from "lib/transition"
 
 import { PageRoutes } from "@/lib/pageroutes"
 import { buttonVariants } from "@/components/ui/button"
-// import { ModalChat } from "@autoai-ui/autoui"
 import { AutoUIConfig } from "@autoai-ui/autoui"
 import dynamic from "next/dynamic";
 
@@ -51,7 +50,7 @@ const autouiConfig: AutoUIConfig = {
   runtime: {
     validateLLMOutput: true,
     storeChatToLocalStorage: true,
-    localStorageKey: 'autoui_demo_chat',
+    localStorageKey: 'autoui',
     enableDebugLogs: true,
     maxSteps: 20,
     errorHandling: { showToUser: true, retryOnFail: false },

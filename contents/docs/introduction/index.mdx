@@ -1,0 +1,168 @@
+---
+title: What is AUTOUI?
+description: Learn about AUTOUI, a config-driven React library that integrates AI-powered chat assistants into your applications.
+keywords: ["autoui", "introduction", "modalchat", "ai", "llm", "react"]
+---
+
+AUTOUI is an npm library that integrates a ready-to-use **ModalChat** component into any React application. Instead of building chat interfaces from scratch, you provide a configuration object that describes your app's capabilities, and AUTOUI handles the rest—from LLM communication to plan execution to UI rendering.
+
+## How AUTOUI Works
+
+AUTOUI follows a **config-driven architecture** where your application's capabilities are defined declaratively. Here's the high-level flow:
+
+```
+User → ModalChat → Proxy Server → OpenRouter/LLM → Plan JSON → Frontend Runtime → Functions/Components
+```
+
+<Step>
+<StepItem title="1. User Interaction">
+A user opens the ModalChat widget and sends a message or request.
+</StepItem>
+
+<StepItem title="2. Config Transmission">
+ModalChat sends your `AutoUIConfig` to the proxy server, which includes:
+- App metadata and description
+- Available functions and components
+- Runtime settings
+</StepItem>
+
+<StepItem title="3. LLM Processing">
+The proxy server forwards the request to OpenRouter (or another LLM provider) with your config. The LLM generates a structured **plan**—a JSON response that describes what actions to take.
+</StepItem>
+
+<StepItem title="4. Plan Execution">
+The frontend runtime receives the plan and executes it step-by-step:
+- Calls registered functions with parameters
+- Renders registered React components
+- Updates UI state
+- Handles errors and retries
+</StepItem>
+
+<StepItem title="5. Response Generation">
+The runtime collects results from function calls and component renders, then sends this context back to the LLM for the next turn of conversation.
+</StepItem>
+</Step>
+
+## Key Concepts
+
+### ModalChat
+
+The main React component you import and render. It displays a chat interface (typically as a floating button that opens a modal) and manages the conversation flow.
+
+```tsx
+import { ModalChat } from "@autoai-ui/autoui"
+
+<ModalChat config={myConfig} />
+```
+
+### Config-Driven UI
+
+Your `AutoUIConfig` object is the **contract** between your app and the AI assistant. It tells the LLM:
+- What your app does (via `metadata.description` and `llm.appDescriptionPrompt`)
+- What functions are available (via `functions`)
+- What UI components can be rendered (via `components`)
+- How to behave (via `runtime` settings)
+
+### Plan & Steps
+
+The LLM returns a **plan**—a structured JSON object that describes a sequence of actions. The runtime executes these steps in order, calling functions and rendering components as needed.
+
+### Runtime
+
+The AUTOUI runtime orchestrates plan execution. It:
+- Validates LLM output (if `validateLLMOutput` is enabled)
+- Executes function calls with proper error handling
+- Renders components with provided props
+- Manages conversation state and localStorage persistence
+- Enforces `maxSteps` limits to prevent infinite loops
+
+### Functions
+
+Functions are JavaScript functions you register in your config. They can:
+- Read application state
+- Modify data
+- Trigger side effects (API calls, navigation, etc.)
+- Return data that becomes context for the LLM
+
+### Components Registry
+
+You can register React components that the LLM can render dynamically. This enables **generative UI**—the assistant can compose new interfaces on the fly based on user requests.
+
+### Proxy-First LLM Access
+
+AUTOUI uses a **proxy server** pattern for security:
+- Your OpenRouter API key stays on the server
+- The frontend only sends a client key (shared secret)
+- The proxy handles authentication and rate limiting
+- CORS and security policies are centralized
+
+## When to Use AUTOUI
+
+<Note title="Good fit" type="success">
+- You want to add an AI assistant to an existing React app quickly
+- You need config-driven behavior (no hardcoded chat flows)
+- You want generative UI capabilities (LLM can render components dynamically)
+- You prefer declarative configuration over imperative chat logic
+- You need to integrate with OpenRouter or similar LLM providers
+</Note>
+
+## When Not to Use AUTOUI
+
+<Note title="Consider alternatives" type="warning">
+- You need full control over chat UI/UX (AUTOUI provides ModalChat, not a headless SDK)
+- You're building a simple chatbot with fixed responses (overkill)
+- You don't want to run a proxy server (though direct API key mode may be available)
+- You need real-time streaming responses (AUTOUI uses request/response pattern)
+- Your app isn't React-based
+</Note>
+
+## Architecture Diagram
+
+```
+┌─────────────┐
+│   User      │
+│  (Browser)  │
+└──────┬──────┘
+       │
+       │ Opens ModalChat
+       ▼
+┌─────────────────┐
+│   ModalChat     │ ◄─── AutoUIConfig
+│  (React Comp)   │      (functions, components, metadata)
+└──────┬──────────┘
+       │
+       │ Sends config + user message
+       ▼
+┌─────────────────┐
+│  Proxy Server   │
+│  (Your Backend) │ ◄─── OPENROUTER_API_KEY (server-side)
+└──────┬──────────┘
+       │
+       │ Forwards to LLM
+       ▼
+┌─────────────────┐
+│  OpenRouter     │
+│  / LLM Provider │
+└──────┬──────────┘
+       │
+       │ Returns Plan JSON
+       ▼
+┌─────────────────┐
+│  Frontend       │
+│  Runtime        │
+└──────┬──────────┘
+       │
+       │ Executes plan:
+       │ - callFunc(...)
+       │ - renderComponent(...)
+       ▼
+┌─────────────────┐
+│  Your App       │
+│  (State/UI)     │
+└─────────────────┘
+```
+
+## Next Steps
+
+Ready to get started? Head to the [Installation & Configuration](/docs/installation) guide to set up AUTOUI in your React app.
+

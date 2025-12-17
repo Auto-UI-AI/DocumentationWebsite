@@ -1,0 +1,400 @@
+---
+title: Troubleshooting & FAQ
+description: Common issues, solutions, and frequently asked questions about AUTOUI.
+keywords: ["troubleshooting", "faq", "errors", "debugging", "common issues"]
+---
+
+This guide covers common issues and solutions when working with AUTOUI.
+
+## Common Issues
+
+### ModalChat Not Rendering
+
+**Symptom:** ModalChat component doesn't appear on the page.
+
+**Possible causes:**
+- SSR mismatch (Next.js)
+- Missing dynamic import
+- CSS z-index issues
+- Config validation errors
+
+**Solutions:**
+
+<Step>
+<StepItem title="Check Dynamic Import">
+Ensure ModalChat is dynamically imported with SSR disabled:
+
+```tsx
+import dynamic from "next/dynamic"
+
+const ModalChat = dynamic(
+  () => import("@autoai-ui/autoui").then(m => m.ModalChat),
+  { ssr: false }
+)
+```
+</StepItem>
+
+<StepItem title="Verify Config">
+Check that your config is valid:
+
+```tsx
+const config: AutoUIConfig = {
+  appId: 'my-app', // Required
+  metadata: { /* ... */ }, // Required
+  llm: { /* ... */ }, // Required
+  runtime: { /* ... */ }, // Required
+}
+```
+</StepItem>
+
+<StepItem title="Check Console">
+Open browser console for error messages:
+
+```javascript
+// Look for AUTOUI errors
+[AUTOUI] Error: ...
+```
+</StepItem>
+
+<StepItem title="Verify Z-Index">
+Ensure ModalChat isn't hidden behind other elements:
+
+```css
+.autoui-wrapper {
+  z-index: 9999;
+}
+```
+</StepItem>
+</Step>
+
+### Proxy Server Connection Errors
+
+**Symptom:** `Failed to connect to proxy server` or CORS errors.
+
+**Possible causes:**
+- Proxy server not running
+- Incorrect `proxyUrl` in config
+- CORS not configured
+- Network/firewall issues
+
+**Solutions:**
+
+<Step>
+<StepItem title="Verify Proxy Server">
+Check that the proxy server is running:
+
+```bash
+# Check if server is running
+curl http://localhost:3001/health
+
+# Or open in browser
+http://localhost:3001
+```
+</StepItem>
+
+<StepItem title="Check proxyUrl">
+Verify the URL in your config:
+
+```tsx
+llm: {
+  proxyUrl: 'http://localhost:3001', // Must match server URL
+  // ...
+}
+```
+</StepItem>
+
+<StepItem title="Configure CORS">
+In your proxy server, allow your frontend origin:
+
+```env
+CORS_ORIGIN=http://localhost:3000
+```
+</StepItem>
+
+<StepItem title="Check Network Tab">
+Open browser DevTools → Network tab and look for failed requests to the proxy server.
+</StepItem>
+</Step>
+
+### LLM Not Responding
+
+**Symptom:** Chat messages are sent but no response is received.
+
+**Possible causes:**
+- Invalid OpenRouter API key
+- Proxy server not forwarding requests
+- LLM provider errors
+- Network timeouts
+
+**Solutions:**
+
+<Step>
+<StepItem title="Check API Key">
+Verify your OpenRouter API key is valid:
+
+```bash
+# Test API key directly
+curl https://openrouter.ai/api/v1/models \
+  -H "Authorization: Bearer sk-or-v1-..."
+```
+</StepItem>
+
+<StepItem title="Check Proxy Logs">
+Review proxy server logs for errors:
+
+```bash
+# Look for OpenRouter API errors
+[ERROR] OpenRouter API error: ...
+```
+</StepItem>
+
+<StepItem title="Verify sharedSecret">
+Ensure the client key (sharedSecret) matches what the proxy server expects.
+</StepItem>
+
+<StepItem title="Check Rate Limits">
+Verify you haven't exceeded OpenRouter rate limits. Check your OpenRouter dashboard.
+</StepItem>
+</Step>
+
+### Functions Not Being Called
+
+**Symptom:** Functions are registered but the LLM never calls them.
+
+**Possible causes:**
+- Unclear function prompts
+- Missing or incorrect params descriptions
+- LLM doesn't understand when to use the function
+
+**Solutions:**
+
+<Step>
+<StepItem title="Improve Prompts">
+Write clear, specific prompts:
+
+```tsx
+// ❌ Bad
+createTask: {
+  prompt: 'Creates a task',
+}
+
+// ✅ Good
+createTask: {
+  prompt: 'Create a new task with title, description, status, and priority. Use this when the user asks to add, create, or make a new task.',
+}
+```
+</StepItem>
+
+<StepItem title="Describe Params Clearly">
+Provide detailed parameter descriptions:
+
+```tsx
+params: {
+  title: 'string — the task title (required)',
+  description: 'string (optional) — detailed task description',
+  status: 'string — one of: "todo", "in-progress", "done"',
+}
+```
+</StepItem>
+
+<StepItem title="Check Debug Logs">
+Enable debug logs to see what the LLM is generating:
+
+```tsx
+runtime: {
+  enableDebugLogs: true,
+}
+```
+</StepItem>
+</Step>
+
+### Components Not Rendering
+
+**Symptom:** Components are registered but never rendered by the LLM.
+
+**Possible causes:**
+- Unclear component prompts
+- Missing or incorrect defaults
+- LLM doesn't understand when to render
+
+**Solutions:**
+
+<Step>
+<StepItem title="Improve Component Prompts">
+Be specific about when to render:
+
+```tsx
+// ❌ Bad
+ProductCard: {
+  prompt: 'Shows a product',
+}
+
+// ✅ Good
+ProductCard: {
+  prompt: 'Display a single product card with image, name, price, and add-to-cart button. Use this when the user asks to show, display, or view a product.',
+}
+```
+</StepItem>
+
+<StepItem title="Provide Realistic Defaults">
+Give examples that match your data structure:
+
+```tsx
+defaults: {
+  id: '1',
+  name: 'Example Product',
+  price: 29.99,
+  image: 'https://example.com/product.jpg',
+}
+```
+</StepItem>
+</Step>
+
+### Plan Execution Errors
+
+**Symptom:** Plans are received but execution fails.
+
+**Possible causes:**
+- Invalid plan structure
+- Function errors
+- Missing state or dependencies
+- maxSteps exceeded
+
+**Solutions:**
+
+<Step>
+<StepItem title="Enable Validation">
+Ensure plan validation is enabled:
+
+```tsx
+runtime: {
+  validateLLMOutput: true,
+}
+```
+</StepItem>
+
+<StepItem title="Check Function Errors">
+Review console for function execution errors:
+
+```
+[AUTOUI] Error executing function: createTask
+```
+</StepItem>
+
+<StepItem title="Increase maxSteps">
+If plans are too complex:
+
+```tsx
+runtime: {
+  maxSteps: 50, // Increase from default 20
+}
+```
+</StepItem>
+
+<StepItem title="Review Error Handling">
+Configure error handling:
+
+```tsx
+runtime: {
+  errorHandling: {
+    showToUser: true,
+    retryOnFail: false,
+  },
+}
+```
+</StepItem>
+</Step>
+
+## FAQ
+
+### Do I need a proxy server?
+
+**Answer:** Yes, for production. The proxy server keeps your OpenRouter API key secure. For development, you may be able to use direct API key mode (not recommended for production).
+
+### Can I use AUTOUI without React?
+
+**Answer:** No, AUTOUI is built specifically for React applications. ModalChat is a React component.
+
+### How do I customize the chat UI?
+
+**Answer:** See the [ModalChat Styling](/docs/styling) guide. You can customize positioning, theming, and appearance through CSS.
+
+### Can I use my own LLM provider?
+
+**Answer:** AUTOUI is designed to work with OpenRouter, which provides access to multiple LLM providers. You may be able to configure other providers through the proxy server.
+
+### How do I handle authentication?
+
+**Answer:** Authentication should be handled in your functions. For example:
+
+```tsx
+functions: {
+  getCurrentUser: {
+    prompt: 'Get the currently authenticated user.',
+    callFunc: () => {
+      return auth.getCurrentUser()
+    },
+  },
+}
+```
+
+### Can I stream responses?
+
+**Answer:** AUTOUI uses a request/response pattern, not streaming. Each turn sends a message and receives a complete response.
+
+### How do I clear chat history?
+
+**Answer:** Clear localStorage:
+
+```javascript
+localStorage.removeItem('autoui_chat')
+```
+
+Or change the `localStorageKey` in your config.
+
+### What's the difference between functions and components?
+
+**Answer:**
+- **Functions**: Execute JavaScript code, modify state, trigger side effects
+- **Components**: Render React UI elements dynamically
+
+See [Functions](/docs/functions) and [Components](/docs/components) for details.
+
+### How do I debug plan execution?
+
+**Answer:** Enable debug logs:
+
+```tsx
+runtime: {
+  enableDebugLogs: true,
+}
+```
+
+Then check the browser console for detailed logs. See [Runtime & Debugging](/docs/runtime) for more.
+
+### Can I use TypeScript?
+
+**Answer:** Yes! AUTOUI is written in TypeScript and provides type definitions. Import types:
+
+```tsx
+import { AutoUIConfig } from "@autoai-ui/autoui"
+```
+
+## Getting Help
+
+If you're still experiencing issues:
+
+1. **Check the documentation**: Review relevant guides
+2. **Enable debug logs**: See [Runtime & Debugging](/docs/runtime)
+3. **Check browser console**: Look for error messages
+4. **Review proxy server logs**: Check server-side errors
+5. **Search GitHub issues**: Check for similar problems
+6. **Contact support**: Reach out via GitHub or project channels
+
+## Next Steps
+
+- Review configuration: [Installation & Configuration](/docs/installation)
+- Understand runtime: [Runtime & Debugging](/docs/runtime)
+- Learn about functions: [Functions](/docs/functions)
+- Explore components: [Components](/docs/components)
+

@@ -1,0 +1,407 @@
+---
+title: Functions
+description: Learn how to register JavaScript functions that the AI assistant can call to interact with your application.
+keywords: ["functions", "callFunc", "params", "returns", "side effects"]
+---
+
+Functions are JavaScript functions you register in your `AutoUIConfig` that the AI assistant can call to interact with your application. They enable the assistant to read state, modify data, trigger side effects, and return information.
+
+## Function Structure
+
+Each function in your config has this structure:
+
+```tsx
+functions: {
+  functionName: {
+    prompt: 'Description of what this function does...',
+    params: {
+      paramName: 'Type description — what this parameter is',
+    },
+    callFunc: ({ paramName }) => {
+      // Your function implementation
+      return result
+    },
+    returns: 'ReturnType — description of what is returned',
+  },
+}
+```
+
+## Key Concepts
+
+### Prompt
+
+The `prompt` field is a **natural language description** that tells the LLM:
+- What the function does
+- When to call it
+- What it's used for
+
+The LLM uses this description to decide whether to call the function and with what parameters.
+
+### Params
+
+The `params` object describes function parameters in a format the LLM can understand:
+
+```tsx
+params: {
+  draft: 'TaskDraft — { title, description?, status, priority, due_date? }',
+  taskId: 'string — unique identifier for the task',
+  status: 'string — new status value: "todo" | "in-progress" | "done"',
+}
+```
+
+**Format:** `parameterName: 'Type — description'`
+
+- Use TypeScript-like type notation
+- Mark optional parameters with `?`
+- Include examples or constraints when helpful
+
+### callFunc
+
+The actual JavaScript function that gets executed. It receives an object with the parameters:
+
+```tsx
+callFunc: ({ draft, taskId, status }) => {
+  // Implementation
+  return result
+}
+```
+
+**Important:**
+- Parameters are passed as an object (destructured)
+- The function can be async
+- Return values become context for the LLM
+- Side effects (API calls, state updates) are allowed
+
+### Returns
+
+A description of what the function returns, in the same format as params:
+
+```tsx
+returns: 'Task — full task object with id, title, status, priority, created_at'
+```
+
+## Example: Task Management Functions
+
+Here's a complete example from a task management app:
+
+```tsx
+functions: {
+  createTask: {
+    prompt: 'Create a new Task object from a TaskDraft by adding id and created_at timestamp.',
+    params: {
+      draft: 'TaskDraft — { title, description?, status, priority, due_date? }',
+    },
+    callFunc: ({ draft }: { draft: TaskDraft }) => {
+      const task = {
+        ...draft,
+        id: generateId(),
+        created_at: new Date().toISOString(),
+      }
+      tasks.push(task)
+      return task
+    },
+    returns: 'Task — full task with generated id and created_at fields.',
+  },
+
+  updateTask: {
+    prompt: 'Update an existing Task using a TaskDraft patch, preserving id and created_at.',
+    params: {
+      task: 'Task — existing task object',
+      patch: 'TaskDraft — fields to update',
+    },
+    callFunc: ({ task, patch }: { task: Task; patch: TaskDraft }) => {
+      const updated = {
+        ...task,
+        ...patch,
+        id: task.id, // Preserve id
+        created_at: task.created_at, // Preserve created_at
+      }
+      const index = tasks.findIndex(t => t.id === task.id)
+      if (index !== -1) {
+        tasks[index] = updated
+      }
+      return updated
+    },
+    returns: 'Task — updated task object.',
+  },
+
+  summarizeTasks: {
+    prompt: 'Compute task statistics: total count and counts by status and priority.',
+    params: {
+      tasks: 'Task[] — current list of tasks',
+    },
+    callFunc: ({ tasks }: { tasks: Task[] }) => {
+      const total = tasks.length
+      const byStatus: Record<string, number> = {}
+      const byPriority: Record<string, number> = {}
+
+      for (const t of tasks) {
+        byStatus[t.status] = (byStatus[t.status] ?? 0) + 1
+        byPriority[t.priority] = (byPriority[t.priority] ?? 0) + 1
+      }
+
+      return { total, byStatus, byPriority }
+    },
+    returns: '{ total: number, byStatus: Record<string, number>, byPriority: Record<string, number> }',
+  },
+
+  openTaskForm: {
+    prompt: 'Open the task creation form in the main app UI. After opening, tell the user they can close the chat and continue in the form.',
+    callFunc: () => {
+      setShowForm(true)
+    },
+  },
+
+  fetchCurrentTasksState: {
+    prompt: 'Return the current list of tasks from application state.',
+    callFunc: () => tasks,
+    returns: 'Task[] — array of all tasks',
+  },
+
+  showHowManyTasks: {
+    prompt: 'Return the number of tasks in the current task list.',
+    callFunc: () => tasks.length,
+    returns: 'number — count of tasks',
+  },
+}
+```
+
+## Function Types
+
+### Read-Only Functions
+
+Functions that only read state and return data:
+
+```tsx
+getUserProfile: {
+  prompt: 'Get the current user profile information.',
+  callFunc: () => currentUser,
+  returns: 'User — user object with name, email, avatar',
+}
+```
+
+### State Modification Functions
+
+Functions that modify application state:
+
+```tsx
+updateUserSettings: {
+  prompt: 'Update user settings with new values.',
+  params: {
+    settings: 'UserSettings — { theme, notifications, language }',
+  },
+  callFunc: ({ settings }) => {
+    userSettings = { ...userSettings, ...settings }
+    saveToLocalStorage(userSettings)
+    return userSettings
+  },
+  returns: 'UserSettings — updated settings object',
+}
+```
+
+### Side Effect Functions
+
+Functions that trigger side effects (API calls, navigation, etc.):
+
+```tsx
+navigateToPage: {
+  prompt: 'Navigate to a specific page in the application.',
+  params: {
+    path: 'string — route path (e.g., "/dashboard", "/settings")',
+  },
+  callFunc: ({ path }) => {
+    router.push(path)
+  },
+},
+
+sendEmail: {
+  prompt: 'Send an email notification.',
+  params: {
+    to: 'string — recipient email address',
+    subject: 'string — email subject',
+    body: 'string — email body text',
+  },
+  callFunc: async ({ to, subject, body }) => {
+    await emailService.send({ to, subject, body })
+    return { success: true, messageId: '...' }
+  },
+  returns: '{ success: boolean, messageId?: string }',
+}
+```
+
+### Async Functions
+
+Functions can be async and return promises:
+
+```tsx
+fetchData: {
+  prompt: 'Fetch data from an API endpoint.',
+  params: {
+    endpoint: 'string — API endpoint URL',
+  },
+  callFunc: async ({ endpoint }) => {
+    const response = await fetch(endpoint)
+    return await response.json()
+  },
+  returns: 'any — JSON response from API',
+}
+```
+
+## Data Sharing Rules
+
+Functions share the same JavaScript scope as your React component. This means:
+
+- **State access**: Functions can read and modify React state
+- **Closures**: Functions have access to variables in their closure
+- **Side effects**: Functions can trigger any side effects (API calls, navigation, etc.)
+
+**Example:**
+
+```tsx
+function MyApp() {
+  const [tasks, setTasks] = useState([])
+  const [showForm, setShowForm] = useState(false)
+
+  const config: AutoUIConfig = {
+    // ...
+    functions: {
+      // Can access tasks and setTasks
+      createTask: {
+        prompt: 'Create a new task.',
+        params: {
+          title: 'string — task title',
+        },
+        callFunc: ({ title }) => {
+          const newTask = { id: generateId(), title, status: 'todo' }
+          setTasks([...tasks, newTask]) // Modify React state
+          return newTask
+        },
+        returns: 'Task — newly created task',
+      },
+
+      // Can access showForm and setShowForm
+      openTaskForm: {
+        prompt: 'Open the task creation form.',
+        callFunc: () => {
+          setShowForm(true) // Trigger UI change
+        },
+      },
+    },
+  }
+
+  return <ModalChat config={config} />
+}
+```
+
+## Best Practices
+
+<Note title="Clear Descriptions" type="success">
+Write clear, specific prompts that explain exactly what the function does and when to use it. The LLM relies on these descriptions to make decisions.
+</Note>
+
+<Note title="Type Safety" type="warning">
+While params are described as strings, consider adding TypeScript types for your own code:
+
+```tsx
+interface TaskDraft {
+  title: string
+  description?: string
+  status: 'todo' | 'in-progress' | 'done'
+  priority: 'low' | 'medium' | 'high'
+  due_date?: string
+}
+
+callFunc: ({ draft }: { draft: TaskDraft }) => {
+  // TypeScript will catch errors
+}
+```
+</Note>
+
+<Note title="Error Handling" type="warning">
+Handle errors gracefully. The runtime will catch exceptions, but you can provide better error messages:
+
+```tsx
+callFunc: ({ taskId }) => {
+  const task = tasks.find(t => t.id === taskId)
+  if (!task) {
+    throw new Error(`Task ${taskId} not found`)
+  }
+  return task
+}
+```
+</Note>
+
+<Note title="Idempotency" type="success">
+When possible, make functions idempotent (safe to call multiple times):
+
+```tsx
+// Good: Idempotent
+markAsComplete: {
+  callFunc: ({ taskId }) => {
+    const task = tasks.find(t => t.id === taskId)
+    if (task) {
+      task.status = 'done' // Safe to call multiple times
+    }
+    return task
+  },
+}
+```
+</Note>
+
+## Common Patterns
+
+### CRUD Operations
+
+```tsx
+// Create
+createItem: { /* ... */ }
+
+// Read
+getItem: { /* ... */ }
+listItems: { /* ... */ }
+
+// Update
+updateItem: { /* ... */ }
+
+// Delete
+deleteItem: { /* ... */ }
+```
+
+### Filtering and Search
+
+```tsx
+searchItems: {
+  prompt: 'Search items by query string.',
+  params: {
+    query: 'string — search query',
+    filters: 'object (optional) — { category?, status?, dateRange? }',
+  },
+  callFunc: ({ query, filters }) => {
+    return items.filter(item => {
+      // Filter logic
+    })
+  },
+}
+```
+
+### Statistics and Aggregations
+
+```tsx
+getStats: {
+  prompt: 'Get aggregated statistics.',
+  callFunc: () => {
+    return {
+      total: items.length,
+      byCategory: groupBy(items, 'category'),
+      average: calculateAverage(items),
+    }
+  },
+}
+```
+
+## Next Steps
+
+- Register components: [Components Registry](/docs/components)
+- Configure runtime: [Runtime & Debugging](/docs/runtime)
+- Troubleshoot issues: [Troubleshooting](/docs/troubleshooting)
+

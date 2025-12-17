@@ -1,0 +1,347 @@
+---
+title: Components Registry
+description: Register React components for generative UI. Enable the AI assistant to render custom components dynamically.
+keywords: ["components", "generative ui", "react components", "registry", "callComponent"]
+---
+
+The Components Registry allows you to register React components that the AI assistant can render dynamically. This enables **generative UI**—the assistant can compose new interfaces on the fly based on user requests.
+
+## How Components Work
+
+When you register a component, the LLM can:
+1. Decide to render it based on user requests
+2. Pass props based on the component's `defaults` and `prompt`
+3. Compose multiple components together
+4. Update component props through conversation
+
+## Component Structure
+
+Each component in your config has this structure:
+
+```tsx
+components: {
+  ComponentName: {
+    prompt: 'Description of what this component displays...',
+    defaults: {
+      propName: 'default value',
+    },
+    callComponent: (props) => <YourComponent {...props} />,
+    category: 'optional-category',
+  },
+}
+```
+
+## Key Concepts
+
+### Prompt
+
+The `prompt` field describes what the component does and when to render it:
+
+```tsx
+prompt: 'Shows cart items with quantities and total; triggers checkout when requested.'
+```
+
+The LLM uses this to decide:
+- When to render the component
+- What props to pass
+- How to describe it to the user
+
+### Defaults
+
+The `defaults` object provides example/default props that help the LLM understand the component's structure:
+
+```tsx
+defaults: {
+  items: [
+    { id: '1', name: 'Beige Coat', price: 89.99, quantity: 2 },
+    { id: '2', name: 'Denim Jacket', price: 69.99, quantity: 1 },
+  ],
+}
+```
+
+**Purpose:**
+- Shows the LLM what props the component expects
+- Provides example data structure
+- Helps the LLM generate appropriate props
+
+### callComponent
+
+A function that returns your React component with the provided props:
+
+```tsx
+callComponent: (props) => <CartSummary {...props} />
+```
+
+**Important:**
+- Must return a valid React element
+- Props come from the LLM (based on defaults and prompt)
+- You can transform or validate props before passing them
+
+### Category
+
+An optional string that groups related components:
+
+```tsx
+category: 'checkout' // Groups with other checkout-related components
+```
+
+Useful for organization and helping the LLM understand component relationships.
+
+## Example: E-Commerce Components
+
+Here's a complete example from an e-commerce app:
+
+```tsx
+components: {
+  CartSummary: {
+    prompt: 'Shows cart items with quantities and total; triggers checkout when requested.',
+    defaults: {
+      items: [
+        { id: '1', name: 'Beige Coat', price: 89.99, quantity: 2 },
+        { id: '2', name: 'Denim Jacket', price: 69.99, quantity: 1 },
+      ],
+    },
+    callComponent: (props) => <CartSummary {...props} />,
+    category: 'checkout',
+  },
+
+  ProductCard: {
+    prompt: 'Displays a single product with image, name, price, and add-to-cart button.',
+    defaults: {
+      id: '1',
+      name: 'Product Name',
+      price: 29.99,
+      image: 'https://example.com/product.jpg',
+      description: 'Product description',
+    },
+    callComponent: (props) => <ProductCard {...props} />,
+    category: 'products',
+  },
+
+  ProductGrid: {
+    prompt: 'Displays a grid of product cards. Use when showing multiple products.',
+    defaults: {
+      products: [
+        { id: '1', name: 'Product 1', price: 29.99 },
+        { id: '2', name: 'Product 2', price: 39.99 },
+      ],
+    },
+    callComponent: (props) => <ProductGrid {...props} />,
+    category: 'products',
+  },
+}
+```
+
+## Component Patterns
+
+### Display Components
+
+Components that show data:
+
+```tsx
+UserProfile: {
+  prompt: 'Displays user profile information: name, avatar, email, and stats.',
+  defaults: {
+    name: 'John Doe',
+    email: 'john@example.com',
+    avatar: 'https://example.com/avatar.jpg',
+    stats: { posts: 42, followers: 123 },
+  },
+  callComponent: (props) => <UserProfile {...props} />,
+}
+```
+
+### Form Components
+
+Components that collect input:
+
+```tsx
+TaskForm: {
+  prompt: 'Displays a form for creating or editing a task. Includes fields for title, description, status, priority, and due date.',
+  defaults: {
+    title: '',
+    description: '',
+    status: 'todo',
+    priority: 'medium',
+    dueDate: null,
+  },
+  callComponent: (props) => <TaskForm {...props} />,
+  category: 'forms',
+}
+```
+
+### Interactive Components
+
+Components that trigger actions:
+
+```tsx
+ActionButton: {
+  prompt: 'A button that triggers an action when clicked. Use for primary actions like "Save", "Submit", "Delete".',
+  defaults: {
+    label: 'Click me',
+    variant: 'primary',
+    onClick: () => {},
+  },
+  callComponent: (props) => <ActionButton {...props} />,
+  category: 'actions',
+}
+```
+
+### Layout Components
+
+Components that organize other components:
+
+```tsx
+Dashboard: {
+  prompt: 'A dashboard layout with sidebar, header, and main content area. Can contain widgets and charts.',
+  defaults: {
+    sidebarItems: [],
+    headerTitle: 'Dashboard',
+    widgets: [],
+  },
+  callComponent: (props) => <Dashboard {...props} />,
+  category: 'layout',
+}
+```
+
+## Props Handling
+
+### Validating Props
+
+Validate and transform props before passing them to your component:
+
+```tsx
+callComponent: (props) => {
+  // Validate required props
+  if (!props.items || !Array.isArray(props.items)) {
+    return <div>Error: Invalid items prop</div>
+  }
+
+  // Transform props
+  const transformedProps = {
+    ...props,
+    items: props.items.map(item => ({
+      ...item,
+      total: item.price * item.quantity,
+    })),
+  }
+
+  return <CartSummary {...transformedProps} />
+}
+```
+
+### Default Props
+
+Provide fallback values:
+
+```tsx
+callComponent: (props) => {
+  const safeProps = {
+    title: props.title || 'Untitled',
+    items: props.items || [],
+    onAction: props.onAction || (() => {}),
+  }
+  return <MyComponent {...safeProps} />
+}
+```
+
+## Component Categories
+
+Use categories to organize related components:
+
+```tsx
+// Navigation
+components: {
+  NavBar: { category: 'navigation', /* ... */ },
+  Sidebar: { category: 'navigation', /* ... */ },
+}
+
+// Data Display
+components: {
+  Table: { category: 'data', /* ... */ },
+  Chart: { category: 'data', /* ... */ },
+  List: { category: 'data', /* ... */ },
+}
+
+// Forms
+components: {
+  TextInput: { category: 'forms', /* ... */ },
+  Select: { category: 'forms', /* ... */ },
+  Checkbox: { category: 'forms', /* ... */ },
+}
+```
+
+## Best Practices
+
+<Note title="Clear Prompts" type="success">
+Write detailed prompts that explain:
+- What the component displays
+- When to use it
+- What props it expects
+- Any special behavior or constraints
+</Note>
+
+<Note title="Realistic Defaults" type="warning">
+Provide realistic default props that match your actual data structure. This helps the LLM generate appropriate props.
+</Note>
+
+<Note title="Component Reusability" type="success">
+Design components to be reusable and composable. The LLM can combine multiple components to create complex UIs.
+</Note>
+
+<Note title="Error Boundaries" type="warning">
+Consider wrapping components in error boundaries to handle rendering errors gracefully:
+
+```tsx
+callComponent: (props) => (
+  <ErrorBoundary>
+    <YourComponent {...props} />
+  </ErrorBoundary>
+)
+```
+</Note>
+
+## Combining Components and Functions
+
+Components can work together with functions:
+
+```tsx
+// Function to fetch data
+functions: {
+  getProducts: {
+    prompt: 'Fetch list of products.',
+    callFunc: () => products,
+    returns: 'Product[]',
+  },
+}
+
+// Component to display data
+components: {
+  ProductGrid: {
+    prompt: 'Display a grid of products.',
+    defaults: {
+      products: [],
+    },
+    callComponent: (props) => <ProductGrid {...props} />,
+  },
+}
+```
+
+The LLM can:
+1. Call `getProducts()` to fetch data
+2. Render `ProductGrid` with the fetched products
+3. Compose multiple components together
+
+## Limitations
+
+- Components are rendered in the chat context (inside ModalChat)
+- Complex layouts may be limited by chat UI constraints
+- Props are generated by the LLM, so validation is important
+- Performance: Many components may impact chat performance
+
+## Next Steps
+
+- Learn about functions: [Functions](/docs/functions)
+- Configure runtime: [Runtime & Debugging](/docs/runtime)
+- Customize styling: [ModalChat Styling](/docs/styling)
+

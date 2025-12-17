@@ -1,0 +1,211 @@
+---
+title: ModalChat Props Reference
+description: Complete reference for ModalChat component props and usage.
+keywords: ["reference", "modalchat", "props", "component", "api"]
+---
+
+Complete reference for the `ModalChat` React component.
+
+## Import
+
+```tsx
+import { ModalChat } from "@autoai-ui/autoui"
+```
+
+Or with dynamic import (recommended for Next.js):
+
+```tsx
+import dynamic from "next/dynamic"
+
+const ModalChat = dynamic(
+  () => import("@autoai-ui/autoui").then(m => m.ModalChat),
+  { ssr: false }
+)
+```
+
+## Props
+
+### `config` (required)
+
+**Type:** `AutoUIConfig`
+
+The AUTOUI configuration object.
+
+```tsx
+<ModalChat config={myConfig} />
+```
+
+See [AutoUIConfig Reference](/docs/reference/autouiconfig) for details.
+
+### `open` (optional)
+
+**Type:** `boolean`
+
+Controls whether the chat modal is open.
+
+```tsx
+const [isOpen, setIsOpen] = useState(false)
+
+<ModalChat 
+  config={config}
+  open={isOpen}
+  onOpenChange={setIsOpen}
+/>
+```
+
+**Default:** `undefined` (uncontrolled)
+
+**Use case:** Use when you want to control the modal state programmatically (e.g., with a custom trigger button).
+
+### `onOpenChange` (optional)
+
+**Type:** `(open: boolean) => void`
+
+Callback fired when the modal open state changes.
+
+```tsx
+<ModalChat 
+  config={config}
+  open={isOpen}
+  onOpenChange={(open) => setIsOpen(open)}
+/>
+```
+
+**Use case:** Use with controlled `open` prop to sync modal state with your component state.
+
+### `className` (optional)
+
+**Type:** `string`
+
+Additional CSS class names for the modal container.
+
+```tsx
+<ModalChat 
+  config={config}
+  className="my-custom-modal"
+/>
+```
+
+**Use case:** Apply custom styling to the modal container.
+
+### `style` (optional)
+
+**Type:** `React.CSSProperties`
+
+Inline styles for the modal container.
+
+```tsx
+<ModalChat 
+  config={config}
+  style={{ zIndex: 9999 }}
+/>
+```
+
+**Use case:** Apply inline styles for positioning or z-index.
+
+## Usage Examples
+
+### Basic Usage
+
+```tsx
+import { ModalChat, AutoUIConfig } from "@autoai-ui/autoui"
+
+export default function App() {
+  const config: AutoUIConfig = {
+    // ... your config
+  }
+
+  return <ModalChat config={config} />
+}
+```
+
+### With Dynamic Import (Next.js)
+
+```tsx
+"use client"
+import dynamic from "next/dynamic"
+import { AutoUIConfig } from "@autoai-ui/autoui"
+
+const ModalChat = dynamic(
+  () => import("@autoai-ui/autoui").then(m => m.ModalChat),
+  { ssr: false }
+)
+
+export default function App() {
+  const config: AutoUIConfig = {
+    // ... your config
+  }
+
+  return <ModalChat config={config} />
+}
+```
+
+### Controlled State
+
+```tsx
+import { useState } from "react"
+import { ModalChat, AutoUIConfig } from "@autoai-ui/autoui"
+
+export default function App() {
+  const [isOpen, setIsOpen] = useState(false)
+  const config: AutoUIConfig = {
+    // ... your config
+  }
+
+  return (
+    <>
+      <button onClick={() => setIsOpen(true)}>
+        Open Chat
+      </button>
+      <ModalChat 
+        config={config}
+        open={isOpen}
+        onOpenChange={setIsOpen}
+      />
+    </>
+  )
+}
+```
+
+### With Custom Styling
+
+```tsx
+<ModalChat 
+  config={config}
+  className="my-custom-chat"
+  style={{ 
+    position: 'fixed',
+    bottom: '20px',
+    right: '20px',
+    zIndex: 9999
+  }}
+/>
+```
+
+## Component Behavior
+
+### Default Trigger Button
+
+By default, ModalChat renders a floating action button (FAB) that opens the chat modal when clicked. The button appears in the bottom-right corner.
+
+### Modal Behavior
+
+- Opens as a modal overlay
+- Closes when clicking outside or pressing Escape
+- Maintains chat history (if `storeChatToLocalStorage` is enabled)
+- Responsive design (adapts to mobile/desktop)
+
+### SSR Considerations
+
+ModalChat must be dynamically imported with `ssr: false` in Next.js or similar SSR frameworks to prevent hydration mismatches.
+
+## Styling
+
+See [ModalChat Styling](/docs/styling) for detailed styling options and customization.
+
+## Related Documentation
+
+- [AutoUIConfig Reference](/docs/reference/autouiconfig) - Config structure
+- [Installation & Configuration](/docs/installation) - Setup guide
+- [ModalChat Styling](/docs/styling) - Styling and theming
+
