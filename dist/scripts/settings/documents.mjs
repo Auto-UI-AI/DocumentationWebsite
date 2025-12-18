@@ -16,6 +16,10 @@ export const Documents = [
                 title: "Next.js",
                 href: "/nextjs",
             },
+            {
+                title: "Integrate AUTOUI Chat",
+                href: "/chat-integration",
+            },
         ],
     },
     {

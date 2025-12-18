@@ -22,16 +22,16 @@ export function Footer() {
         <div className="hidden items-center md:block">
           <Link
             className="font-semibold"
-            href="https://rubixstudios.com.au"
-            title="Rubix Studios"
-            aria-label="Rubix Studios"
+            href="https://www.npmjs.com/package/@autoai-ui/autoui"
+            title="AUTOUI on npm"
+            aria-label="AUTOUI on npm"
             target="_blank"
           >
             <Image
               src="/logo.svg"
-              alt="Rubix Studios logo"
-              title="Rubix Studios logo"
-              aria-label="Rubix Studios logo"
+              alt="AUTOUI logo"
+              title="AUTOUI logo"
+              aria-label="AUTOUI logo"
               priority={false}
               width={30}
               height={30}

@@ -6,12 +6,12 @@ export const Navigations = [
     href: `/docs${PageRoutes[0].href}`,
   },
   {
-    title: "Rubix",
-    href: "https://rubixstudios.com.au",
+    title: "AUTOUI (npm)",
+    href: "https://www.npmjs.com/package/@autoai-ui/autoui",
     external: true,
   },
 ]
 
 export const GitHubLink = {
-  href: "https://github.com/rubixvi/rubix-documents",
+  href: "https://github.com/autoai-ui/autoui",
 }
