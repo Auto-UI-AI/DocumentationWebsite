@@ -1,97 +1,55 @@
 export const Documents = [
     {
         heading: "Introduction",
-        title: "Basic Setup",
-        href: "/basic-setup",
-        items: [
-            {
-                title: "Installation",
-                href: "/installation",
-            },
-            {
-                title: "Setup",
-                href: "/setup",
-            },
-            {
-                title: "Changelog",
-                href: "/changelog",
-            },
-        ],
+        title: "What is AUTOUI?",
+        href: "/introduction",
+    },
+    {
+        title: "Installation & Configuration",
+        href: "/installation",
+    },
+    {
+        title: "Backend Proxy",
+        href: "/backend-proxy",
     },
     {
         spacer: true,
     },
     {
-        title: "Navigation",
-        href: "/navigation",
-        heading: "Documents",
-    },
-    {
-        title: "Structure",
-        href: "/structure",
-        items: [
-            {
-                title: "Deep",
-                href: "/deep",
-                items: [
-                    {
-                        title: "Deeper",
-                        href: "/deeper",
-                        items: [
-                            {
-                                title: "Even deeper",
-                                href: "/even-deeper",
-                            },
-                        ],
-                    },
-                ],
-            },
-        ],
+        heading: "UI & Styling",
+        title: "ModalChat Styling",
+        href: "/styling",
     },
     {
         spacer: true,
     },
     {
-        title: "Markdown",
-        href: "/markdown",
-        heading: "Components",
-        items: [
-            {
-                title: "Cards",
-                href: "/cards",
-            },
-            {
-                title: "Diagrams",
-                href: "/diagrams",
-            },
-            {
-                title: "Filetree",
-                href: "/filetree",
-            },
-            {
-                title: "Lists",
-                href: "/lists",
-            },
-            {
-                title: "Maths",
-                href: "/maths",
-            },
-            {
-                title: "Notes",
-                href: "/notes",
-            },
-            {
-                title: "Steps",
-                href: "/steps",
-            },
-            {
-                title: "Table",
-                href: "/table",
-            },
-            {
-                title: "Tabs",
-                href: "/tabs",
-            },
-        ],
+        heading: "Advanced",
+        title: "Functions",
+        href: "/functions",
+    },
+    {
+        title: "Components",
+        href: "/components",
+    },
+    {
+        title: "Runtime & Debugging",
+        href: "/runtime",
+    },
+    {
+        title: "Troubleshooting",
+        href: "/troubleshooting",
+    },
+    {
+        spacer: true,
+    },
+    {
+        heading: "Reference",
+        title: "AutoUIConfig",
+        href: "/reference/autouiconfig",
+    },
+    {
+        title: "ModalChat Props",
+        href: "/reference/modalchat",
     },
 ];

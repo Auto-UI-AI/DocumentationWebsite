@@ -30,27 +30,25 @@ export function TableAnchor({ tocs }: TableAnchorProps) {
   return (
     <div className="flex w-full flex-col gap-3 pl-2">
       <h3 className="text-sm font-semibold">On this page</h3>
-      <ScrollArea className="pt-0.5 pb-4">
-        <div className="text-foreground flex flex-col gap-2.5 text-sm">
-          {tocs.map(({ href, level, text }) => (
-            <Link
-              key={href}
-              href={href}
-              title={text}
-              aria-label={text}
-              scroll={false}
-              onClick={(e) => handleSmoothScroll(e, href)}
-              className={clsx({
-                "pl-0": level == 2,
-                "pl-3": level == 3,
-                "pl-6": level == 4,
-              })}
-            >
-              {text}
-            </Link>
-          ))}
-        </div>
-      </ScrollArea>
+      <div className="text-foreground flex flex-col gap-2.5 text-sm">
+        {tocs.map(({ href, level, text }) => (
+          <Link
+            key={href}
+            href={href}
+            title={text}
+            aria-label={text}
+            scroll={false}
+            onClick={(e) => handleSmoothScroll(e, href)}
+            className={clsx({
+              "pl-0": level == 2,
+              "pl-3": level == 3,
+              "pl-6": level == 4,
+            })}
+          >
+            {text}
+          </Link>
+        ))}
+      </div>
     </div>
   )
 }

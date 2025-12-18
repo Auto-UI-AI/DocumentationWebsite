@@ -6,6 +6,7 @@ import { GoogleTagManager } from "@next/third-parties/google"
 import { Settings } from "@/types/settings"
 import { Footer } from "@/components/navigation/footer"
 import { Navbar } from "@/components/navigation/navbar"
+import { AutoUIChat } from "@/components/autoui-chat"
 
 import "@/styles/globals.css"
 
@@ -61,6 +62,7 @@ export default function RootLayout({
           <Navbar />
           <main className="h-auto px-5 sm:px-8">{children}</main>
           <Footer />
+          <AutoUIChat />
         </Providers>
       </body>
     </html>

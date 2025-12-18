@@ -1,0 +1,511 @@
+---
+title: Best Practices for React Apps
+description: Learn the best approaches for using AUTOUI in React applications, including configuration, performance, and common patterns.
+keywords: ["best practices", "react", "patterns", "performance", "configuration"]
+---
+
+This guide covers best practices for integrating AUTOUI into React applications, helping you build robust, performant, and maintainable AI-powered features.
+
+## Configuration Management
+
+### Centralize Your Config
+
+Create a dedicated config file to keep your AutoUIConfig organized and maintainable:
+
+```tsx
+// lib/autoui-config.ts
+import { AutoUIConfig } from "@autoai-ui/autoui"
+
+export function createAutoUIConfig(): AutoUIConfig {
+  return {
+    appId: 'my-react-app',
+    llm: {
+      proxyUrl: process.env.REACT_APP_PROXY_URL || 'http://localhost:3001',
+      sharedSecret: process.env.REACT_APP_SHARED_SECRET,
+      // ... rest of config
+    },
+    // ... rest of config
+  }
+}
+```
+
+### Use Environment Variables
+
+Always use environment variables for sensitive configuration:
+
+```tsx
+// .env
+REACT_APP_PROXY_URL=http://localhost:3001
+REACT_APP_SHARED_SECRET=your-secret-key
+```
+
+```tsx
+// In your config
+llm: {
+  proxyUrl: process.env.REACT_APP_PROXY_URL!,
+  sharedSecret: process.env.REACT_APP_SHARED_SECRET,
+}
+```
+
+<Note title="Environment Variables" type="info">
+In Create React App, environment variables must be prefixed with `REACT_APP_` to be accessible in the browser.
+</Note>
+
+## Component Integration
+
+### Use Dynamic Imports for Code Splitting
+
+If you're using a bundler that supports code splitting, dynamically import ModalChat to reduce initial bundle size:
+
+```tsx
+import { lazy, Suspense } from 'react'
+
+const ModalChat = lazy(() => import('@autoai-ui/autoui').then(m => ({ default: m.ModalChat })))
+
+function App() {
+  const config = createAutoUIConfig()
+  
+  return (
+    <div>
+      <Suspense fallback={<div>Loading chat...</div>}>
+        <ModalChat config={config} />
+      </Suspense>
+    </div>
+  )
+}
+```
+
+### Memoize Your Config
+
+If your config is expensive to create, memoize it to avoid recreating it on every render:
+
+```tsx
+import { useMemo } from 'react'
+
+function App() {
+  const config = useMemo(() => createAutoUIConfig(), [])
+  
+  return <ModalChat config={config} />
+}
+```
+
+## Function Registration
+
+### Keep Functions Pure When Possible
+
+Functions that don't depend on external state are easier to test and reason about:
+
+```tsx
+// ✅ Good: Pure function
+functions: {
+  calculateTotal: {
+    prompt: 'Calculate the total price',
+    callFunc: ({ items }: { items: Array<{ price: number }> }) => {
+      return items.reduce((sum, item) => sum + item.price, 0)
+    },
+    returns: 'number - Total price',
+    canShareDataWithLLM: true,
+  },
+}
+
+// ⚠️ Acceptable: Function with side effects (when necessary)
+functions: {
+  navigateToPage: {
+    prompt: 'Navigate to a page',
+    callFunc: ({ path }: { path: string }) => {
+      window.location.href = path
+      return { success: true }
+    },
+    returns: 'Object with success status',
+  },
+}
+```
+
+### Always Return Values
+
+Functions must return a value so the LLM can analyze results:
+
+```tsx
+// ✅ Good: Returns a value
+callFunc: ({ query }: { query: string }) => {
+  const results = searchItems(query)
+  return { results, count: results.length }
+}
+
+// ❌ Bad: Returns void
+callFunc: ({ query }: { query: string }) => {
+  searchItems(query) // Missing return!
+}
+```
+
+### Use canShareDataWithLLM Appropriately
+
+Set `canShareDataWithLLM: true` for functions that return safe, shareable data:
+
+```tsx
+functions: {
+  // ✅ Safe to share - public data
+  getPublicProducts: {
+    prompt: 'Get list of products',
+    callFunc: () => fetchProducts(),
+    canShareDataWithLLM: true,
+  },
+  
+  // ❌ Don't share - sensitive data
+  getUserProfile: {
+    prompt: 'Get user profile',
+    callFunc: () => getCurrentUser(),
+    canShareDataWithLLM: false, // Contains sensitive info
+  },
+}
+```
+
+## Component Registration
+
+### Use Proper Component Types
+
+Components should be React `ComponentType`, which can be function components or class components:
+
+```tsx
+// ✅ Good: Function component
+const MyComponent = ({ title }: { title: string }) => (
+  <div>{title}</div>
+)
+
+components: {
+  MyComponent: {
+    prompt: 'Displays a title',
+    callComponent: MyComponent,
+    props: {
+      title: 'string - The title to display',
+    },
+  },
+}
+
+// ✅ Also good: Inline function component
+components: {
+  MyComponent: {
+    prompt: 'Displays a title',
+    callComponent: ({ title }: { title: string }) => <div>{title}</div>,
+  },
+}
+```
+
+### Provide Default Props
+
+Default props help the LLM understand what values to use:
+
+```tsx
+components: {
+  ProductCard: {
+    prompt: 'Displays a product card',
+    props: {
+      name: 'string - Product name',
+      price: 'number - Product price',
+    },
+    defaults: {
+      name: 'Untitled Product',
+      price: 0,
+    },
+    callComponent: ProductCard,
+  },
+}
+```
+
+### Document Props Clearly
+
+Clear prop descriptions help the LLM use components correctly:
+
+```tsx
+components: {
+  UserProfile: {
+    prompt: 'Displays user profile information',
+    props: {
+      userId: 'string (required) - Unique user identifier',
+      showEmail: 'boolean (optional) - Whether to show email address',
+      theme: 'string (optional) - Color theme: "light" | "dark"',
+    },
+    callComponent: UserProfile,
+  },
+}
+```
+
+## State Management
+
+### Access React Context in Functions
+
+If you need to access React context or state in functions, pass them through closure:
+
+```tsx
+import { useContext } from 'react'
+import { UserContext } from './contexts/UserContext'
+
+function App() {
+  const user = useContext(UserContext)
+  
+  const config = useMemo(() => ({
+    // ... other config
+    functions: {
+      getUserData: {
+        prompt: 'Get current user data',
+        callFunc: () => {
+          // Access user from closure
+          return { name: user.name, email: user.email }
+        },
+        returns: 'User object',
+        canShareDataWithLLM: false,
+      },
+    },
+  }), [user])
+  
+  return <ModalChat config={config} />
+}
+```
+
+### Use Callbacks for State Updates
+
+When functions need to update React state, use callbacks:
+
+```tsx
+function App() {
+  const [cart, setCart] = useState([])
+  
+  const config = useMemo(() => ({
+    // ... other config
+    functions: {
+      addToCart: {
+        prompt: 'Add item to cart',
+        callFunc: ({ itemId }: { itemId: string }) => {
+          setCart(prev => [...prev, itemId])
+          return { success: true, cartSize: cart.length + 1 }
+        },
+        returns: 'Object with success status and cart size',
+      },
+    },
+  }), [cart])
+  
+  return <ModalChat config={config} />
+}
+```
+
+## Performance Optimization
+
+### Limit Function Complexity
+
+Keep functions focused and performant:
+
+```tsx
+// ✅ Good: Simple, focused function
+functions: {
+  getItemCount: {
+    prompt: 'Get number of items',
+    callFunc: () => items.length,
+    returns: 'number',
+  },
+}
+
+// ⚠️ Avoid: Complex operations that block the UI
+functions: {
+  processLargeDataset: {
+    prompt: 'Process large dataset',
+    callFunc: async () => {
+      // This might block the UI - consider using Web Workers
+      return processData(largeDataset)
+    },
+  },
+}
+```
+
+### Use Appropriate maxSteps
+
+Set `maxSteps` based on your app's complexity:
+
+```tsx
+runtime: {
+  maxSteps: 10,  // Simple apps
+  // maxSteps: 20,  // Medium complexity
+  // maxSteps: 30,  // Complex apps with many functions
+}
+```
+
+### Enable Debug Logs in Development
+
+Use debug logs during development, disable in production:
+
+```tsx
+runtime: {
+  enableDebugLogs: process.env.NODE_ENV === 'development',
+}
+```
+
+## Error Handling
+
+### Provide Meaningful Error Messages
+
+Functions should return helpful error information:
+
+```tsx
+functions: {
+  fetchData: {
+    prompt: 'Fetch data from API',
+    callFunc: async ({ url }: { url: string }) => {
+      try {
+        const response = await fetch(url)
+        if (!response.ok) {
+          return { 
+            error: true, 
+            message: `HTTP ${response.status}: ${response.statusText}` 
+          }
+        }
+        return { data: await response.json() }
+      } catch (error) {
+        return { 
+          error: true, 
+          message: error instanceof Error ? error.message : 'Unknown error' 
+        }
+      }
+    },
+    returns: 'Object with data or error information',
+  },
+}
+```
+
+### Configure Error Handling
+
+Set appropriate error handling based on your needs:
+
+```tsx
+runtime: {
+  errorHandling: {
+    showToUser: true,        // Show errors in chat UI
+    retryOnFail: false,     // Don't auto-retry (user can retry manually)
+  },
+}
+```
+
+## Testing
+
+### Mock Functions for Testing
+
+Create mock implementations for testing:
+
+```tsx
+// __mocks__/autoui-config.ts
+export function createAutoUIConfig(): AutoUIConfig {
+  return {
+    appId: 'test-app',
+    llm: {
+      proxyUrl: 'http://localhost:3001',
+    },
+    runtime: {
+      validateLLMOutput: false, // Disable validation in tests
+      enableDebugLogs: false,
+    },
+    functions: {
+      // Mock functions for testing
+      testFunction: {
+        prompt: 'Test function',
+        callFunc: () => ({ test: true }),
+      },
+    },
+  }
+}
+```
+
+## Security Best Practices
+
+### Never Expose Secrets
+
+Never hardcode API keys or secrets in your config:
+
+```tsx
+// ❌ Bad: Hardcoded secret
+llm: {
+  proxyUrl: 'http://localhost:3001',
+  sharedSecret: 'my-secret-key', // Don't do this!
+}
+
+// ✅ Good: Use environment variables
+llm: {
+  proxyUrl: process.env.REACT_APP_PROXY_URL!,
+  sharedSecret: process.env.REACT_APP_SHARED_SECRET,
+}
+```
+
+### Validate User Input in Functions
+
+Always validate and sanitize user input:
+
+```tsx
+functions: {
+  searchItems: {
+    prompt: 'Search for items',
+    callFunc: ({ query }: { query: string }) => {
+      // Validate input
+      if (!query || typeof query !== 'string') {
+        return { error: 'Invalid query' }
+      }
+      
+      // Sanitize (remove dangerous characters)
+      const sanitized = query.replace(/[<>]/g, '')
+      
+      return searchItems(sanitized)
+    },
+  },
+}
+```
+
+## Common Patterns
+
+### Navigation Pattern
+
+```tsx
+import { useNavigate } from 'react-router-dom'
+
+function App() {
+  const navigate = useNavigate()
+  
+  const config = useMemo(() => ({
+    // ... other config
+    functions: {
+      navigateToPage: {
+        prompt: 'Navigate to a page',
+        callFunc: ({ path }: { path: string }) => {
+          navigate(path)
+          return { success: true, path }
+        },
+        returns: 'Navigation result',
+      },
+    },
+  }), [navigate])
+  
+  return <ModalChat config={config} />
+}
+```
+
+### Data Fetching Pattern
+
+```tsx
+functions: {
+  fetchUserData: {
+    prompt: 'Fetch user data from API',
+    callFunc: async ({ userId }: { userId: string }) => {
+      const response = await fetch(`/api/users/${userId}`)
+      if (!response.ok) {
+        return { error: 'Failed to fetch user' }
+      }
+      const data = await response.json()
+      return { user: data, fetchedAt: new Date().toISOString() }
+    },
+    returns: 'User data object',
+    canShareDataWithLLM: false, // User data is sensitive
+  },
+}
+```
+
+## Next Steps
+
+- Learn about [Next.js best practices](/docs/best-practices/nextjs) for server-side rendering
+- Review [Functions documentation](/docs/functions) for advanced function patterns
+- Check [Components documentation](/docs/components) for component registration details
+

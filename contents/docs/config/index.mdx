@@ -1,0 +1,214 @@
+---
+title: Config Explanation
+description: Understand AutoUIConfig structure and how to configure AUTOUI for your app.
+keywords: ["config", "configuration", "autouiconfig", "setup"]
+---
+
+Your `AutoUIConfig` is the contract between your app and the AI assistant. It tells the AI what your app can do.
+
+## Basic Structure
+
+```tsx
+import { AutoUIConfig } from "@autoai-ui/autoui"
+
+const config: AutoUIConfig = {
+  appId: 'my-app',           // Required: Unique app ID
+  llm: { /* ... */ },        // Required: LLM configuration
+  runtime: { /* ... */ },    // Required: Runtime settings
+  functions: { /* ... */ },  // Optional: Functions AI can call
+  components: { /* ... */ }, // Optional: Components AI can render
+  metadata: { /* ... */ },   // Optional: App metadata
+}
+```
+
+## Required Fields
+
+### `appId`
+
+Unique identifier for your app:
+
+```tsx
+appId: 'my-app'
+```
+
+### `llm`
+
+LLM provider configuration:
+
+```tsx
+llm: {
+  proxyUrl: 'http://localhost:3001',  // Required: Your proxy URL
+  sharedSecret: 'your-secret',        // Optional: Proxy auth
+  appDescriptionPrompt: 'My app does...', // Optional: Describe your app
+}
+```
+
+### `runtime`
+
+Runtime execution settings:
+
+```tsx
+runtime: {
+  validateLLMOutput: true,           // Validate AI responses
+  storeChatToLocalStorage: true,      // Save chat history
+  maxSteps: 20,                        // Max AI actions per turn
+  errorHandling: {
+    showToUser: true,                  // Show errors in chat
+    retryOnFail: false,                // Auto-retry on failure
+  },
+}
+```
+
+## Optional Fields
+
+### `metadata`
+
+App information (helps AI understand your app):
+
+```tsx
+metadata: {
+  appName: 'My App',
+  description: 'What my app does...',
+  tags: ['ecommerce', 'react'],
+}
+```
+
+### `functions`
+
+Functions the AI can call:
+
+```tsx
+functions: {
+  searchProducts: {
+    prompt: 'Search for products',
+    callFunc: ({ query }) => searchProducts(query),
+    returns: 'Array of products',
+  },
+}
+```
+
+### `components`
+
+Components the AI can render:
+
+```tsx
+components: {
+  ProductCard: {
+    prompt: 'Display a product card',
+    callComponent: ProductCard,
+    props: {
+      name: 'string - Product name',
+      price: 'number - Product price',
+    },
+  },
+}
+```
+
+## React vs Next.js
+
+### React Config
+
+```tsx
+// lib/autoui-config.ts
+import { AutoUIConfig } from "@autoai-ui/autoui"
+
+export function createAutoUIConfig(): AutoUIConfig {
+  return {
+    appId: 'my-react-app',
+    llm: {
+      proxyUrl: process.env.REACT_APP_PROXY_URL!,
+      sharedSecret: process.env.REACT_APP_SHARED_SECRET,
+    },
+    runtime: {
+      validateLLMOutput: true,
+      storeChatToLocalStorage: true,
+    },
+  }
+}
+```
+
+### Next.js Config
+
+```tsx
+// lib/autoui-config.tsx
+"use client"
+
+import { AutoUIConfig } from "@autoai-ui/autoui"
+
+export function createAutoUIConfig(): AutoUIConfig {
+  return {
+    appId: 'my-nextjs-app',
+    llm: {
+      proxyUrl: process.env.NEXT_PUBLIC_PROXY_URL!,
+      sharedSecret: process.env.NEXT_PUBLIC_SHARED_SECRET,
+    },
+    runtime: {
+      validateLLMOutput: true,
+      storeChatToLocalStorage: true,
+    },
+  }
+}
+```
+
+## Common Patterns
+
+### With Navigation
+
+```tsx
+import { useRouter } from 'next/navigation'
+
+export function createAutoUIConfig(router) {
+  return {
+    // ... other config
+    functions: {
+      navigate: {
+        prompt: 'Navigate to a page',
+        callFunc: ({ path }) => {
+          router.push(path)
+          return { success: true }
+        },
+      },
+    },
+  }
+}
+```
+
+### With State
+
+```tsx
+import { useState } from 'react'
+
+function App() {
+  const [cart, setCart] = useState([])
+  
+  const config = {
+    // ... other config
+    functions: {
+      addToCart: {
+        prompt: 'Add item to cart',
+        callFunc: ({ item }) => {
+          setCart([...cart, item])
+          return { success: true }
+        },
+      },
+    },
+  }
+  
+  return <ModalChat config={config} />
+}
+```
+
+## Best Practices
+
+1. **Use environment variables** for sensitive data
+2. **Keep functions simple** and focused
+3. **Document props clearly** for components
+4. **Set appropriate maxSteps** based on complexity
+5. **Enable validation** in production
+
+## Learn More
+
+- [Functions Guide](/docs/functions) - Register functions
+- [Components Guide](/docs/components) - Register components
+- [Full Reference](/docs/reference/autouiconfig) - Complete API reference
+

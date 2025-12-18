@@ -1,0 +1,605 @@
+---
+title: Best Practices for Next.js Apps
+description: Learn the best approaches for using AUTOUI in Next.js applications, including SSR considerations, App Router patterns, and performance optimization.
+keywords: ["best practices", "nextjs", "next.js", "ssr", "app router", "server components"]
+---
+
+This guide covers best practices for integrating AUTOUI into Next.js applications, with special attention to Server-Side Rendering (SSR), the App Router, and Next.js-specific patterns.
+
+## SSR Considerations
+
+### Always Use Dynamic Imports
+
+ModalChat must be dynamically imported with `ssr: false` to prevent hydration mismatches:
+
+```tsx
+// app/layout.tsx or app/page.tsx
+"use client"
+
+import dynamic from "next/dynamic"
+
+const ModalChat = dynamic(
+  () => import("@autoai-ui/autoui").then(m => m.ModalChat),
+  { ssr: false }  // ← Critical: Must disable SSR
+)
+
+export default function Layout({ children }) {
+  const config = createAutoUIConfig()
+  
+  return (
+    <html>
+      <body>
+        {children}
+        <ModalChat config={config} />
+      </body>
+    </html>
+  )
+}
+```
+
+<Note title="SSR Requirement" type="warning">
+ModalChat **must** be dynamically imported with `ssr: false` in Next.js. This is required because ModalChat uses browser-only APIs (localStorage, window, etc.) that aren't available during server-side rendering.
+</Note>
+
+### Client Component Boundary
+
+Since ModalChat requires client-side features, ensure your config is created in a client component:
+
+```tsx
+// ✅ Good: Config in client component
+"use client"
+
+import { useMemo } from 'react'
+import { createAutoUIConfig } from '@/lib/autoui-config'
+
+export default function ClientLayout() {
+  const config = useMemo(() => createAutoUIConfig(), [])
+  return <ModalChat config={config} />
+}
+
+// ❌ Bad: Config in server component
+// This won't work because server components can't use browser APIs
+export default function ServerLayout() {
+  const config = createAutoUIConfig() // Error: Can't access window/localStorage
+  return <ModalChat config={config} />
+}
+```
+
+## App Router Patterns
+
+### Global ModalChat in Root Layout
+
+Add ModalChat to your root layout for app-wide access:
+
+```tsx
+// app/layout.tsx
+import { AutoUIChat } from '@/components/autoui-chat'
+
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <body>
+        {children}
+        <AutoUIChat /> {/* Global chat component */}
+      </body>
+    </html>
+  )
+}
+```
+
+### Create a Wrapper Component
+
+Create a dedicated client component wrapper:
+
+```tsx
+// components/autoui-chat.tsx
+"use client"
+
+import { ModalChat } from "@autoai-ui/autoui"
+import dynamic from "next/dynamic"
+import { useMemo } from "react"
+import { createAutoUIConfig } from "@/lib/autoui-config"
+
+const DynamicModalChat = dynamic(
+  () => Promise.resolve(ModalChat),
+  { ssr: false }
+)
+
+export function AutoUIChat() {
+  const config = useMemo(() => createAutoUIConfig(), [])
+  
+  return (
+    <DynamicModalChat 
+      config={config}
+      style={{
+        position: 'fixed',
+        bottom: '24px',
+        right: '24px',
+        zIndex: 1000,
+      }}
+    />
+  )
+}
+```
+
+## Configuration Management
+
+### Environment Variables
+
+Use Next.js environment variables (no `NEXT_PUBLIC_` prefix needed for server, required for client):
+
+```tsx
+// .env.local
+NEXT_PUBLIC_PROXY_URL=http://localhost:3001
+NEXT_PUBLIC_SHARED_SECRET=your-secret-key
+```
+
+```tsx
+// lib/autoui-config.tsx
+"use client"
+
+export function createAutoUIConfig(): AutoUIConfig {
+  return {
+    appId: 'my-nextjs-app',
+    llm: {
+      proxyUrl: process.env.NEXT_PUBLIC_PROXY_URL!,
+      sharedSecret: process.env.NEXT_PUBLIC_SHARED_SECRET,
+    },
+    // ... rest of config
+  }
+}
+```
+
+<Note title="Environment Variables" type="info">
+In Next.js, client-side environment variables must be prefixed with `NEXT_PUBLIC_` to be accessible in the browser. Server-side variables don't need this prefix.
+</Note>
+
+### Use Next.js Router in Functions
+
+Access Next.js router through closure:
+
+```tsx
+// lib/autoui-config.tsx
+"use client"
+
+import { useRouter } from 'next/navigation'
+import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime'
+
+export function createAutoUIConfig(router: AppRouterInstance): AutoUIConfig {
+  return {
+    // ... other config
+    functions: {
+      navigateToPage: {
+        prompt: 'Navigate to a page',
+        callFunc: ({ path }: { path: string }) => {
+          router.push(path)
+          return { success: true, path }
+        },
+        returns: 'Navigation result',
+      },
+    },
+  }
+}
+```
+
+```tsx
+// components/autoui-chat.tsx
+"use client"
+
+import { useRouter } from 'next/navigation'
+import { useMemo } from 'react'
+
+export function AutoUIChat() {
+  const router = useRouter()
+  const config = useMemo(() => createAutoUIConfig(router), [router])
+  
+  return <ModalChat config={config} />
+}
+```
+
+## Server Actions Integration
+
+### Use Server Actions for Backend Operations
+
+Leverage Next.js Server Actions for secure backend operations:
+
+```tsx
+// app/actions.ts
+"use server"
+
+export async function fetchUserData(userId: string) {
+  // Server-side operation - secure, can access database
+  const user = await db.user.findUnique({ where: { id: userId } })
+  return { user }
+}
+```
+
+```tsx
+// lib/autoui-config.tsx
+"use client"
+
+import { fetchUserData } from '@/app/actions'
+
+export function createAutoUIConfig(): AutoUIConfig {
+  return {
+    // ... other config
+    functions: {
+      getUserData: {
+        prompt: 'Get user data',
+        callFunc: async ({ userId }: { userId: string }) => {
+          return await fetchUserData(userId)
+        },
+        returns: 'User data object',
+        canShareDataWithLLM: false,
+      },
+    },
+  }
+}
+```
+
+## Performance Optimization
+
+### Code Splitting
+
+ModalChat is automatically code-split when using dynamic imports:
+
+```tsx
+// This automatically code-splits ModalChat
+const ModalChat = dynamic(
+  () => import("@autoai-ui/autoui").then(m => m.ModalChat),
+  { ssr: false }
+)
+```
+
+### Memoize Config with Dependencies
+
+If your config depends on props or state, memoize it properly:
+
+```tsx
+"use client"
+
+import { useMemo } from 'react'
+import { useRouter } from 'next/navigation'
+import { useSession } from '@/hooks/use-session'
+
+export function AutoUIChat() {
+  const router = useRouter()
+  const session = useSession()
+  
+  const config = useMemo(() => createAutoUIConfig(router, session), [router, session])
+  
+  return <ModalChat config={config} />
+}
+```
+
+### Optimize Bundle Size
+
+Only import what you need:
+
+```tsx
+// ✅ Good: Import only ModalChat
+import { ModalChat } from "@autoai-ui/autoui"
+
+// ❌ Avoid: Importing entire library if not needed
+import * as AutoUI from "@autoai-ui/autoui"
+```
+
+## TypeScript Best Practices
+
+### Use Proper Types
+
+Import types from the library:
+
+```tsx
+import type { AutoUIConfig, AutoUIFunction, AutoUIComponent } from "@autoai-ui/autoui"
+
+export function createAutoUIConfig(): AutoUIConfig {
+  // TypeScript will validate your config
+  return {
+    appId: 'my-app',
+    // ... rest of config
+  }
+}
+```
+
+### Type Your Functions
+
+Type your function parameters and return values:
+
+```tsx
+import type { AutoUIConfig } from "@autoai-ui/autoui"
+
+const config: AutoUIConfig = {
+  // ... other config
+  functions: {
+    searchProducts: {
+      prompt: 'Search products',
+      callFunc: ({ query }: { query: string }): { results: any[]; count: number } => {
+        const results = searchProducts(query)
+        return { results, count: results.length }
+      },
+      returns: 'Object with results array and count',
+    },
+  },
+}
+```
+
+## Middleware Integration
+
+### Protect Routes with Middleware
+
+If you need authentication, use Next.js middleware:
+
+```tsx
+// middleware.ts
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+
+export function middleware(request: NextRequest) {
+  // Your auth logic
+  const token = request.cookies.get('token')
+  
+  if (!token && request.nextUrl.pathname.startsWith('/protected')) {
+    return NextResponse.redirect(new URL('/login', request.url))
+  }
+  
+  return NextResponse.next()
+}
+```
+
+Your AutoUIConfig functions can then check authentication:
+
+```tsx
+functions: {
+  getProtectedData: {
+    prompt: 'Get protected data',
+    callFunc: async () => {
+      // Check auth in function
+      const response = await fetch('/api/protected', {
+        headers: { 'Authorization': `Bearer ${getToken()}` }
+      })
+      return response.json()
+    },
+  },
+}
+```
+
+## API Routes Integration
+
+### Use API Routes for Backend Logic
+
+Create API routes for complex backend operations:
+
+```tsx
+// app/api/search/route.ts
+export async function POST(request: Request) {
+  const { query } = await request.json()
+  
+  // Server-side search logic
+  const results = await searchDatabase(query)
+  
+  return Response.json({ results })
+}
+```
+
+```tsx
+// lib/autoui-config.tsx
+functions: {
+  search: {
+    prompt: 'Search the database',
+    callFunc: async ({ query }: { query: string }) => {
+      const response = await fetch('/api/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query }),
+      })
+      return response.json()
+    },
+    returns: 'Search results',
+    canShareDataWithLLM: true,
+  },
+}
+```
+
+## Error Handling
+
+### Use Next.js Error Boundaries
+
+Wrap ModalChat in an error boundary:
+
+```tsx
+// app/error-boundary.tsx
+"use client"
+
+import { Component, type ReactNode } from 'react'
+
+interface Props {
+  children: ReactNode
+}
+
+interface State {
+  hasError: boolean
+}
+
+export class ErrorBoundary extends Component<Props, State> {
+  constructor(props: Props) {
+    super(props)
+    this.state = { hasError: false }
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true }
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return <div>Something went wrong with the chat.</div>
+    }
+
+    return this.props.children
+  }
+}
+```
+
+```tsx
+// app/layout.tsx
+import { ErrorBoundary } from './error-boundary'
+import { AutoUIChat } from '@/components/autoui-chat'
+
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <body>
+        {children}
+        <ErrorBoundary>
+          <AutoUIChat />
+        </ErrorBoundary>
+      </body>
+    </html>
+  )
+}
+```
+
+## Deployment Considerations
+
+### Environment Variables in Production
+
+Set environment variables in your deployment platform:
+
+```bash
+# Vercel
+vercel env add NEXT_PUBLIC_PROXY_URL
+vercel env add NEXT_PUBLIC_SHARED_SECRET
+
+# Other platforms
+# Set NEXT_PUBLIC_* variables in your platform's environment settings
+```
+
+### Build Optimization
+
+Ensure your build includes ModalChat correctly:
+
+```json
+// next.config.js
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  // Your config
+}
+
+module.exports = nextConfig
+```
+
+ModalChat will be automatically code-split and won't affect your initial bundle size.
+
+## Common Patterns
+
+### Route Navigation Pattern
+
+```tsx
+"use client"
+
+import { useRouter, usePathname } from 'next/navigation'
+
+export function createAutoUIConfig(router: AppRouterInstance): AutoUIConfig {
+  return {
+    // ... other config
+    functions: {
+      navigateToPage: {
+        prompt: 'Navigate to a page',
+        callFunc: ({ path }: { path: string }) => {
+          router.push(path)
+          return { success: true, currentPath: path }
+        },
+        returns: 'Navigation result',
+      },
+      getCurrentPage: {
+        prompt: 'Get current page path',
+        callFunc: () => {
+          return { path: window.location.pathname }
+        },
+        returns: 'Current page path',
+      },
+    },
+  }
+}
+```
+
+### Data Fetching with Server Components
+
+Combine server components with client-side ModalChat:
+
+```tsx
+// app/products/page.tsx (Server Component)
+async function ProductsPage() {
+  const products = await fetchProducts() // Server-side fetch
+  
+  return (
+    <div>
+      <ProductsList products={products} />
+      <AutoUIChat /> {/* Client component */}
+    </div>
+  )
+}
+```
+
+## Testing
+
+### Mock Next.js Router
+
+Mock the Next.js router in tests:
+
+```tsx
+// __mocks__/next/navigation.ts
+export const useRouter = () => ({
+  push: jest.fn(),
+  replace: jest.fn(),
+  refresh: jest.fn(),
+})
+
+export const usePathname = () => '/test-path'
+```
+
+## Security Best Practices
+
+### Never Expose Server Secrets
+
+Server-side secrets should never be in `NEXT_PUBLIC_*` variables:
+
+```tsx
+// ❌ Bad: Exposing server secret
+NEXT_PUBLIC_DATABASE_PASSWORD=secret123
+
+// ✅ Good: Server-only variable
+DATABASE_PASSWORD=secret123
+
+// Use in Server Actions or API Routes (not in client components)
+```
+
+### Validate Input in API Routes
+
+Always validate input in your API routes:
+
+```tsx
+// app/api/search/route.ts
+import { z } from 'zod'
+
+const searchSchema = z.object({
+  query: z.string().min(1).max(100),
+})
+
+export async function POST(request: Request) {
+  const body = await request.json()
+  const { query } = searchSchema.parse(body) // Validates and throws if invalid
+  
+  // Safe to use query
+  return Response.json({ results: await search(query) })
+}
+```
+
+## Next Steps
+
+- Review [React best practices](/docs/best-practices/react) for general React patterns
+- Learn about [Functions](/docs/functions) for advanced function registration
+- Check [Components](/docs/components) for component patterns
+- See [Troubleshooting](/docs/troubleshooting) for common Next.js issues
+

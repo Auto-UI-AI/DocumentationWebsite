@@ -2,56 +2,35 @@ import { Paths } from "@/lib/pageroutes"
 
 export const Documents: Paths[] = [
   {
-    heading: "Introduction",
+    heading: "Getting Started",
     title: "What is AUTOUI?",
     href: "/introduction",
   },
   {
-    title: "Installation & Configuration",
+    title: "Quick Start",
+    href: "/quickstart",
+    items: [
+      {
+        title: "React",
+        href: "/react",
+      },
+      {
+        title: "Next.js",
+        href: "/nextjs",
+      },
+    ],
+  },
+  {
+    title: "Quick Installation & Configuration",
     href: "/installation",
   },
   {
-    title: "Backend Proxy",
+    title: "Backend Proxy Installation & Configuration",
     href: "/backend-proxy",
   },
   {
-    spacer: true,
-  },
-  {
-    heading: "UI & Styling",
-    title: "ModalChat Styling",
-    href: "/styling",
-  },
-  {
-    spacer: true,
-  },
-  {
-    heading: "Advanced",
-    title: "Functions",
-    href: "/functions",
-  },
-  {
-    title: "Components",
-    href: "/components",
-  },
-  {
-    title: "Runtime & Debugging",
-    href: "/runtime",
-  },
-  {
-    title: "Troubleshooting",
-    href: "/troubleshooting",
-  },
-  {
-    spacer: true,
-  },
-  {
-    heading: "Reference",
-    title: "AutoUIConfig",
-    href: "/reference/autouiconfig",
-  },
-  {
-    title: "ModalChat Props",
-    href: "/reference/modalchat",
+    title: "Config Explanation",
+    href: "/config",
   },
 ]
+

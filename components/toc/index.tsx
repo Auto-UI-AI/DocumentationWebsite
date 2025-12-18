@@ -1,4 +1,5 @@
 import { Settings } from "@/types/settings"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { TableAnchor, TableAnchorProps } from "@/components/toc/anchor"
 import { BackToTop } from "@/components/toc/backtotop"
 import Feedback from "@/components/toc/feedback"
@@ -14,14 +15,18 @@ export function TableOfContents({ tocs, pathName, frontmatter }: TableProps) {
     <>
       {Settings.rightbar && (
         <aside
-          className="toc sticky top-26 hidden h-[100vh] min-w-[230px] gap-3 xl:flex xl:flex-col"
+          className="toc sticky top-26 hidden h-[calc(100vh-6.5rem)] min-w-[230px] gap-3 xl:flex xl:flex-col"
           aria-label="Table of contents"
         >
-          {Settings.toc && <TableAnchor tocs={tocs.tocs} />}
-          {Settings.feedback && (
-            <Feedback slug={pathName} title={frontmatter.title} />
-          )}
-          {Settings.totop && <BackToTop />}
+          <ScrollArea className="h-full">
+            <div className="flex flex-col gap-3 pr-4">
+              {Settings.toc && <TableAnchor tocs={tocs.tocs} />}
+              {Settings.feedback && (
+                <Feedback slug={pathName} title={frontmatter.title} />
+              )}
+              {Settings.totop && <BackToTop />}
+            </div>
+          </ScrollArea>
         </aside>
       )}
     </>
