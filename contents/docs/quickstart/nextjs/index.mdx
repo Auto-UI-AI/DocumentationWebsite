@@ -1,1 +1,146 @@
+---
+title: Next.js Quick Start
+description: Get AUTOUI running in your Next.js app in under 5 minutes. Step-by-step guide for Next.js applications.
+keywords: ["nextjs", "next.js", "quickstart", "getting started", "app router", "pages router"]
+---
 
+This guide will help you integrate AUTOUI into your Next.js application quickly.
+
+## Prerequisites
+
+- A Next.js application (App Router or Pages Router)
+- Node.js 16 or higher
+- A backend proxy server (see [Backend Proxy Setup](/docs/backend-proxy))
+
+## Step 1: Install AUTOUI
+
+```bash
+npm install @autoai-ui/autoui
+```
+
+## Step 2: Create Your Config
+
+Create a new file `lib/autoui-config.tsx` (note the `.tsx` extension):
+
+```tsx
+"use client"
+
+import { AutoUIConfig } from "@autoai-ui/autoui"
+
+export function createAutoUIConfig(): AutoUIConfig {
+  return {
+    appId: 'my-nextjs-app',
+    llm: {
+      proxyUrl: process.env.NEXT_PUBLIC_PROXY_URL || 'http://localhost:3001',
+      sharedSecret: process.env.NEXT_PUBLIC_SHARED_SECRET,
+    },
+    runtime: {
+      validateLLMOutput: true,
+      storeChatToLocalStorage: true,
+      maxSteps: 10,
+    },
+  }
+}
+```
+
+<Note title="Client Component" type="warning">
+The config file must be a client component (`"use client"`) because ModalChat requires browser APIs. Always use the `.tsx` extension for config files in Next.js.
+</Note>
+
+## Step 3: Add Environment Variables
+
+Create or update your `.env.local` file:
+
+```env
+NEXT_PUBLIC_PROXY_URL=http://localhost:3001
+NEXT_PUBLIC_SHARED_SECRET=your-secret-key-here
+```
+
+## Step 4: Add ModalChat to Your Layout
+
+### For App Router (app directory)
+
+Create or update `app/layout.tsx`:
+
+```tsx
+import dynamic from "next/dynamic"
+import { createAutoUIConfig } from "@/lib/autoui-config"
+
+// Dynamic import with SSR disabled (required!)
+const ModalChat = dynamic(
+  () => import("@autoai-ui/autoui").then((mod) => mod.ModalChat),
+  { ssr: false }
+)
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  const config = createAutoUIConfig()
+
+  return (
+    <html lang="en">
+      <body>
+        {children}
+        <ModalChat config={config} />
+      </body>
+    </html>
+  )
+}
+```
+
+### For Pages Router (pages directory)
+
+Create or update `pages/_app.tsx`:
+
+```tsx
+import dynamic from "next/dynamic"
+import { createAutoUIConfig } from "@/lib/autoui-config"
+import type { AppProps } from "next/app"
+
+// Dynamic import with SSR disabled (required!)
+const ModalChat = dynamic(
+  () => import("@autoai-ui/autoui").then((mod) => mod.ModalChat),
+  { ssr: false }
+)
+
+export default function App({ Component, pageProps }: AppProps) {
+  const config = createAutoUIConfig()
+
+  return (
+    <>
+      <Component {...pageProps} />
+      <ModalChat config={config} />
+    </>
+  )
+}
+```
+
+<Note title="SSR Requirement" type="warning">
+ModalChat **must** be dynamically imported with `ssr: false` in Next.js. This prevents hydration errors since ModalChat uses browser-only APIs.
+</Note>
+
+## Step 5: Start Your App
+
+```bash
+npm run dev
+```
+
+You should now see a floating chat button in the bottom-right corner of your app!
+
+## Next Steps
+
+- Learn about [configuration options](/docs/config)
+- Add [functions and components](/docs/functions) to extend capabilities
+- Check out [Next.js best practices](/docs/best-practices/nextjs)
+
+## Troubleshooting
+
+If you encounter issues:
+
+- Make sure your backend proxy server is running
+- Verify your environment variables are set correctly (must use `NEXT_PUBLIC_` prefix)
+- Ensure ModalChat is dynamically imported with `ssr: false`
+- Check the browser console for error messages
+- See the [Troubleshooting guide](/docs/troubleshooting)

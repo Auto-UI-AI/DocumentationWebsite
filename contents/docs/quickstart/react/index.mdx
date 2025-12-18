@@ -1,1 +1,103 @@
+---
+title: React Quick Start
+description: Get AUTOUI running in your React app in under 5 minutes. Step-by-step guide for React applications.
+keywords: ["react", "quickstart", "getting started", "create react app", "vite"]
+---
 
+This guide will help you integrate AUTOUI into your React application quickly.
+
+## Prerequisites
+
+- A React application (Create React App, Vite, or any React setup)
+- Node.js 16 or higher
+- A backend proxy server (see [Backend Proxy Setup](/docs/backend-proxy))
+
+## Step 1: Install AUTOUI
+
+```bash
+npm install @autoai-ui/autoui
+```
+
+## Step 2: Create Your Config
+
+Create a new file `lib/autoui-config.ts`:
+
+```tsx
+import { AutoUIConfig } from "@autoai-ui/autoui"
+
+export function createAutoUIConfig(): AutoUIConfig {
+  return {
+    appId: 'my-react-app',
+    llm: {
+      proxyUrl: process.env.REACT_APP_PROXY_URL || 'http://localhost:3001',
+      sharedSecret: process.env.REACT_APP_SHARED_SECRET,
+    },
+    runtime: {
+      validateLLMOutput: true,
+      storeChatToLocalStorage: true,
+      maxSteps: 10,
+    },
+  }
+}
+```
+
+## Step 3: Add Environment Variables
+
+Create or update your `.env` file:
+
+```env
+REACT_APP_PROXY_URL=http://localhost:3001
+REACT_APP_SHARED_SECRET=your-secret-key-here
+```
+
+<Note title="Environment Variables" type="info">
+For Create React App, environment variables must start with `REACT_APP_`. For Vite, use `VITE_` prefix instead.
+</Note>
+
+## Step 4: Add ModalChat to Your App
+
+Import and render the ModalChat component in your main app file:
+
+```tsx
+// App.tsx or your main component
+import { ModalChat } from "@autoai-ui/autoui"
+import { createAutoUIConfig } from "./lib/autoui-config"
+
+function App() {
+  const config = createAutoUIConfig()
+
+  return (
+    <div className="App">
+      <h1>My React App</h1>
+      {/* Your app content */}
+      
+      <ModalChat config={config} />
+    </div>
+  )
+}
+
+export default App
+```
+
+## Step 5: Start Your App
+
+```bash
+npm start
+```
+
+You should now see a floating chat button in the bottom-right corner of your app!
+
+## Next Steps
+
+- Learn about [configuration options](/docs/config)
+- Add [functions and components](/docs/functions) to extend capabilities
+- Check out [React best practices](/docs/best-practices/react)
+
+## Troubleshooting
+
+If you encounter issues:
+
+- Make sure your backend proxy server is running
+- Verify your environment variables are set correctly
+- Check the browser console for error messages
+- See the [Troubleshooting guide](/docs/troubleshooting)

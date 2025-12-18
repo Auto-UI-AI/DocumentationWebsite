@@ -21,12 +21,6 @@ export function AutoUIChat() {
   return (
     <DynamicModalChat 
       config={config}
-      style={{
-        position: 'fixed',
-        bottom: '24px',
-        right: '24px',
-        zIndex: 1000,
-      }}
     />
   )
 }
