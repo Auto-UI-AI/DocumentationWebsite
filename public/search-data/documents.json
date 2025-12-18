@@ -927,126 +927,34 @@
   {
     "slug": "/quickstart",
     "title": "Quick Start",
-    "description": "Get started with AUTOUI in minutes. Choose your framework and follow the simple setup guide.",
-    "content": "Get AUTOUI up and running in your React or Next.js app in just a few minutes.\n\n## Choose Your Framework\n\n## What You'll Need\n\n* A React or Next.js project\n* A backend proxy server (we'll help you set this up)\n* An OpenRouter API key (or similar LLM provider)\n\n## Installation\n\n```bash\nnpm install @autoai-ui/autoui\n```\n\nor\n\n```bash\nyarn add @autoai-ui/autoui\n```\n\nor\n\n```bash\npnpm add @autoai-ui/autoui\n```\n\n## Next Steps\n\n1. **Set up your backend proxy** - See [Backend Proxy Setup](/docs/backend-proxy)\n2. **Choose your framework** - Follow the React or Next.js guide\n3. **Configure AUTOUI** - See [Config Explanation](/docs/config)\n\nReady to dive in? Pick your framework above and let's get started!\n",
+    "description": "",
+    "content": "",
     "_searchMeta": {
-      "cleanContent": "get autoui up and running in your react or next js app in just a few minutes choose your framework what you ll need a react or next js project a backend proxy server we ll help you set this up an openrouter api key or similar llm provider installation or or next steps set up your backend proxy - see backend proxy setup choose your framework - follow the react or next js guide configure autoui - see config explanation ready to dive in pick your framework above and let s get started",
-      "headings": [
-        "Choose Your Framework",
-        "What You'll Need",
-        "Installation",
-        "Next Steps"
-      ],
-      "keywords": [
-        "quickstart",
-        "getting started",
-        "setup",
-        "installation",
-        "Choose Your Framework",
-        "What You'll Need",
-        "Installation",
-        "Next Steps",
-        "Set up your backend proxy",
-        "Choose your framework",
-        "Configure AUTOUI",
-        "bash\nnpm install @autoai-ui/autoui",
-        "or",
-        "bash\nyarn add @autoai-ui/autoui",
-        "bash\npnpm add @autoai-ui/autoui"
-      ]
+      "cleanContent": "",
+      "headings": [],
+      "keywords": []
     }
   },
   {
     "slug": "/quickstart/nextjs",
-    "title": "Quick Start - Next.js",
-    "description": "Get started with AUTOUI in a Next.js application. Optimized for App Router and SSR.",
-    "content": "Get AUTOUI running in your Next.js app in 5 minutes.\n\n## Step 1: Install AUTOUI\n\n```bash\nnpm install @autoai-ui/autoui\n```\n\n## Step 2: Set Up Backend Proxy\n\nYou'll need a backend proxy server. See [Backend Proxy Setup](/docs/backend-proxy) for details.\n\nFor now, you'll need:\n\n* `PROXY_URL` - Your proxy server URL (e.g., `http://localhost:3001`)\n* `SHARED_SECRET` - Your proxy shared secret\n\n## Step 3: Create Your Config\n\nCreate `lib/autoui-config.tsx` (note: `.tsx` for client component):\n\n```tsx\n\"use client\"\r\n\r\nimport { AutoUIConfig } from \"@autoai-ui/autoui\"\r\n\r\nexport function createAutoUIConfig(): AutoUIConfig {\r\n  return {\r\n    appId: 'my-nextjs-app',\r\n    \r\n    llm: {\r\n      proxyUrl: process.env.NEXT_PUBLIC_PROXY_URL || 'http://localhost:3001',\r\n      sharedSecret: process.env.NEXT_PUBLIC_SHARED_SECRET,\r\n      appDescriptionPrompt: 'A Next.js application with an AI assistant.',\r\n    },\r\n    \r\n    runtime: {\r\n      validateLLMOutput: true,\r\n      storeChatToLocalStorage: true,\r\n      maxSteps: 20,\r\n    },\r\n  }\r\n}\n```\n\n## Step 4: Create Chat Component\n\nCreate `components/autoui-chat.tsx`:\n\n```tsx\n\"use client\"\r\n\r\nimport { ModalChat } from \"@autoai-ui/autoui\"\r\nimport dynamic from \"next/dynamic\"\r\nimport { useMemo } from \"react\"\r\nimport { createAutoUIConfig } from \"@/lib/autoui-config\"\r\n\r\nconst DynamicModalChat = dynamic(\r\n  () => import(\"@autoai-ui/autoui\").then(m => m.ModalChat),\r\n  { ssr: false }  // ← Critical: Must disable SSR\r\n)\r\n\r\nexport function AutoUIChat() {\r\n  const config = useMemo(() => createAutoUIConfig(), [])\r\n  \r\n  return <DynamicModalChat config={config} />\r\n}\n```\n\n## Step 5: Add to Layout\n\nAdd to your `app/layout.tsx`:\n\n```tsx\nimport { AutoUIChat } from \"@/components/autoui-chat\"\r\n\r\nexport default function RootLayout({ children }) {\r\n  return (\r\n    <html>\r\n      <body>\r\n        {children}\r\n        <AutoUIChat />\r\n      </body>\r\n    </html>\r\n  )\r\n}\n```\n\n## Step 6: Environment Variables\n\nCreate `.env.local`:\n\n```env\nNEXT_PUBLIC_PROXY_URL=http://localhost:3001\r\nNEXT_PUBLIC_SHARED_SECRET=your-shared-secret\n```\n\n## That's It!\n\nYou should now see a chat button in the bottom-right corner. Click it to start chatting!\n\n## Next Steps\n\n* Add [Functions](/docs/functions) to enable AI actions\n* Add [Components](/docs/components) for generative UI\n* Learn [Best Practices](/docs/best-practices/nextjs) for Next.js apps\n",
+    "title": "Next.js",
+    "description": "",
+    "content": "",
     "_searchMeta": {
-      "cleanContent": "get autoui running in your next js app in 5 minutes step 1: install autoui step 2: set up backend proxy you ll need a backend proxy server see backend proxy setup for details for now you ll need: proxy_url - your proxy server url e g http: localhost:3001 shared_secret - your proxy shared secret step 3: create your config create lib autoui-config tsx note: tsx for client component : step 4: create chat component create components autoui-chat tsx: step 5: add to layout add to your app layout tsx: step 6: environment variables create env local: that s it you should now see a chat button in the bottom-right corner click it to start chatting next steps add functions to enable ai actions add components for generative ui learn best practices for next js apps",
-      "headings": [
-        "Step 1: Install AUTOUI",
-        "Step 2: Set Up Backend Proxy",
-        "Step 3: Create Your Config",
-        "Step 4: Create Chat Component",
-        "Step 5: Add to Layout",
-        "Step 6: Environment Variables",
-        "That's It!",
-        "Next Steps"
-      ],
-      "keywords": [
-        "nextjs",
-        "next.js",
-        "quickstart",
-        "setup",
-        "app router",
-        "Step 1: Install AUTOUI",
-        "Step 2: Set Up Backend Proxy",
-        "Step 3: Create Your Config",
-        "Step 4: Create Chat Component",
-        "Step 5: Add to Layout",
-        "Step 6: Environment Variables",
-        "That's It!",
-        "Next Steps",
-        "bash\nnpm install @autoai-ui/autoui",
-        "## Step 2: Set Up Backend Proxy\n\nYou'll need a backend proxy server. See [Backend Proxy Setup](/docs/backend-proxy) for details.\n\nFor now, you'll need:\n\n*",
-        "- Your proxy server URL (e.g.,",
-        ")\n*",
-        "- Your proxy shared secret\n\n## Step 3: Create Your Config\n\nCreate",
-        "(note:",
-        "for client component):",
-        "tsx\n\"use client\"\r\n\r\nimport { AutoUIConfig } from \"@autoai-ui/autoui\"\r\n\r\nexport function createAutoUIConfig(): AutoUIConfig {\r\n  return {\r\n    appId: 'my-nextjs-app',\r\n    \r\n    llm: {\r\n      proxyUrl: process.env.NEXT_PUBLIC_PROXY_URL || 'http://localhost:3001',\r\n      sharedSecret: process.env.NEXT_PUBLIC_SHARED_SECRET,\r\n      appDescriptionPrompt: 'A Next.js application with an AI assistant.',\r\n    },\r\n    \r\n    runtime: {\r\n      validateLLMOutput: true,\r\n      storeChatToLocalStorage: true,\r\n      maxSteps: 20,\r\n    },\r\n  }\r\n}",
-        "## Step 4: Create Chat Component\n\nCreate",
-        ":",
-        "tsx\n\"use client\"\r\n\r\nimport { ModalChat } from \"@autoai-ui/autoui\"\r\nimport dynamic from \"next/dynamic\"\r\nimport { useMemo } from \"react\"\r\nimport { createAutoUIConfig } from \"@/lib/autoui-config\"\r\n\r\nconst DynamicModalChat = dynamic(\r\n  () => import(\"@autoai-ui/autoui\").then(m => m.ModalChat),\r\n  { ssr: false }  // ← Critical: Must disable SSR\r\n)\r\n\r\nexport function AutoUIChat() {\r\n  const config = useMemo(() => createAutoUIConfig(), [])\r\n  \r\n  return <DynamicModalChat config={config} />\r\n}",
-        "## Step 5: Add to Layout\n\nAdd to your",
-        "tsx\nimport { AutoUIChat } from \"@/components/autoui-chat\"\r\n\r\nexport default function RootLayout({ children }) {\r\n  return (\r\n    <html>\r\n      <body>\r\n        {children}\r\n        <AutoUIChat />\r\n      </body>\r\n    </html>\r\n  )\r\n}",
-        "## Step 6: Environment Variables\n\nCreate",
-        "env\nNEXT_PUBLIC_PROXY_URL=http://localhost:3001\r\nNEXT_PUBLIC_SHARED_SECRET=your-shared-secret"
-      ]
+      "cleanContent": "",
+      "headings": [],
+      "keywords": []
     }
   },
   {
     "slug": "/quickstart/react",
-    "title": "Quick Start - React",
-    "description": "Get started with AUTOUI in a React application. Simple, step-by-step guide.",
-    "content": "Get AUTOUI running in your React app in 5 minutes.\n\n## Step 1: Install AUTOUI\n\n```bash\nnpm install @autoai-ui/autoui\n```\n\n## Step 2: Set Up Backend Proxy\n\nYou'll need a backend proxy server. See [Backend Proxy Setup](/docs/backend-proxy) for details.\n\nFor now, you'll need:\n\n* `PROXY_URL` - Your proxy server URL (e.g., `http://localhost:3001`)\n* `SHARED_SECRET` - Your proxy shared secret\n\n## Step 3: Create Your Config\n\nCreate `lib/autoui-config.ts`:\n\n```tsx\nimport { AutoUIConfig } from \"@autoai-ui/autoui\"\r\n\r\nexport function createAutoUIConfig(): AutoUIConfig {\r\n  return {\r\n    appId: 'my-react-app',\r\n    \r\n    llm: {\r\n      proxyUrl: process.env.REACT_APP_PROXY_URL || 'http://localhost:3001',\r\n      sharedSecret: process.env.REACT_APP_SHARED_SECRET,\r\n      appDescriptionPrompt: 'A React application with an AI assistant.',\r\n    },\r\n    \r\n    runtime: {\r\n      validateLLMOutput: true,\r\n      storeChatToLocalStorage: true,\r\n      maxSteps: 20,\r\n    },\r\n  }\r\n}\n```\n\n## Step 4: Add ModalChat\n\nIn your main App component:\n\n```tsx\nimport { ModalChat } from \"@autoai-ui/autoui\"\r\nimport { createAutoUIConfig } from \"./lib/autoui-config\"\r\n\r\nfunction App() {\r\n  const config = createAutoUIConfig()\r\n  \r\n  return (\r\n    <div>\r\n      <h1>My App</h1>\r\n      <ModalChat config={config} />\r\n    </div>\r\n  )\r\n}\r\n\r\nexport default App\n```\n\n## Step 5: Environment Variables\n\nCreate `.env` file:\n\n```env\nREACT_APP_PROXY_URL=http://localhost:3001\r\nREACT_APP_SHARED_SECRET=your-shared-secret\n```\n\n## That's It!\n\nYou should now see a chat button in the bottom-right corner. Click it to start chatting!\n\n## Next Steps\n\n* Add [Functions](/docs/functions) to enable AI actions\n* Add [Components](/docs/components) for generative UI\n* Learn [Best Practices](/docs/best-practices/react) for React apps\n",
+    "title": "React",
+    "description": "",
+    "content": "",
     "_searchMeta": {
-      "cleanContent": "get autoui running in your react app in 5 minutes step 1: install autoui step 2: set up backend proxy you ll need a backend proxy server see backend proxy setup for details for now you ll need: proxy_url - your proxy server url e g http: localhost:3001 shared_secret - your proxy shared secret step 3: create your config create lib autoui-config ts: step 4: add modalchat in your main app component: step 5: environment variables create env file: that s it you should now see a chat button in the bottom-right corner click it to start chatting next steps add functions to enable ai actions add components for generative ui learn best practices for react apps",
-      "headings": [
-        "Step 1: Install AUTOUI",
-        "Step 2: Set Up Backend Proxy",
-        "Step 3: Create Your Config",
-        "Step 4: Add ModalChat",
-        "Step 5: Environment Variables",
-        "That's It!",
-        "Next Steps"
-      ],
-      "keywords": [
-        "react",
-        "quickstart",
-        "setup",
-        "create react app",
-        "vite",
-        "Step 1: Install AUTOUI",
-        "Step 2: Set Up Backend Proxy",
-        "Step 3: Create Your Config",
-        "Step 4: Add ModalChat",
-        "Step 5: Environment Variables",
-        "That's It!",
-        "Next Steps",
-        "bash\nnpm install @autoai-ui/autoui",
-        "## Step 2: Set Up Backend Proxy\n\nYou'll need a backend proxy server. See [Backend Proxy Setup](/docs/backend-proxy) for details.\n\nFor now, you'll need:\n\n*",
-        "- Your proxy server URL (e.g.,",
-        ")\n*",
-        "- Your proxy shared secret\n\n## Step 3: Create Your Config\n\nCreate",
-        ":",
-        "tsx\nimport { AutoUIConfig } from \"@autoai-ui/autoui\"\r\n\r\nexport function createAutoUIConfig(): AutoUIConfig {\r\n  return {\r\n    appId: 'my-react-app',\r\n    \r\n    llm: {\r\n      proxyUrl: process.env.REACT_APP_PROXY_URL || 'http://localhost:3001',\r\n      sharedSecret: process.env.REACT_APP_SHARED_SECRET,\r\n      appDescriptionPrompt: 'A React application with an AI assistant.',\r\n    },\r\n    \r\n    runtime: {\r\n      validateLLMOutput: true,\r\n      storeChatToLocalStorage: true,\r\n      maxSteps: 20,\r\n    },\r\n  }\r\n}",
-        "## Step 4: Add ModalChat\n\nIn your main App component:",
-        "tsx\nimport { ModalChat } from \"@autoai-ui/autoui\"\r\nimport { createAutoUIConfig } from \"./lib/autoui-config\"\r\n\r\nfunction App() {\r\n  const config = createAutoUIConfig()\r\n  \r\n  return (\r\n    <div>\r\n      <h1>My App</h1>\r\n      <ModalChat config={config} />\r\n    </div>\r\n  )\r\n}\r\n\r\nexport default App",
-        "## Step 5: Environment Variables\n\nCreate",
-        "file:",
-        "env\nREACT_APP_PROXY_URL=http://localhost:3001\r\nREACT_APP_SHARED_SECRET=your-shared-secret"
-      ]
+      "cleanContent": "",
+      "headings": [],
+      "keywords": []
     }
   },
   {
