@@ -1,0 +1,236 @@
+---
+title: Integrate AUTOUI Chat into Your App
+description: End-to-end guide for adding the ModalChat assistant to your React or Next.js application.
+keywords: ["autoui", "chat", "integration", "modalchat", "react", "nextjs", "quickstart"]
+---
+
+This guide walks you through **everything you need** to integrate the AUTOUI chat (`ModalChat`) into your app.
+
+It covers:
+
+- React apps (Create React App, Vite, etc.)
+- Next.js (App Router and Pages Router)
+- Required config, environment variables, and best practices
+
+> This documentation site **does not mount** the chat globally anymore.  
+> Use the examples below to wire it into **your own app**.
+
+## 1. Install the library
+
+```bash
+npm install @autoai-ui/autoui
+```
+
+You can also use `pnpm` or `yarn` if that’s what your project uses.
+
+## 2. Create your `AutoUIConfig`
+
+At the core of AUTOUI is the `AutoUIConfig` object.  
+It tells the assistant how to talk to your backend, which functions it can call, and which components it can render.
+
+Create a config file in your project:
+
+```tsx
+// lib/autoui-config.ts (React) or lib/autoui-config.tsx (Next.js)
+import type { AutoUIConfig } from "@autoai-ui/autoui"
+
+export function createAutoUIConfig(): AutoUIConfig {
+  return {
+    appId: "my-app",
+    llm: {
+      // Proxy that talks to your LLM provider
+      proxyUrl: process.env.NEXT_PUBLIC_PROXY_URL || "http://localhost:3001",
+      sharedSecret: process.env.NEXT_PUBLIC_AUTOUI_SHARED_SECRET,
+      temperature: 0.3,
+    },
+    runtime: {
+      validateLLMOutput: true,
+      storeChatToLocalStorage: true,
+      localStorageKey: "autoui_chat",
+      maxSteps: 20,
+    },
+    // Optional: register functions and components here
+    // functions: { ... }
+    // components: { ... }
+  }
+}
+```
+
+<Note title="File extension" type="info">
+- In **React** projects the file can be `.ts` or `.tsx`.  
+- In **Next.js** (App Router) it’s easiest to use `.tsx` and a `"use client"` directive if you access browser APIs.
+</Note>
+
+For a deeper breakdown of every field, see the [AutoUIConfig reference](/docs/reference/autouiconfig).
+
+## 3. Environment variables
+
+You need at least:
+
+- A proxy URL that forwards requests to your LLM provider
+- A shared secret used to authenticate from the browser to your proxy
+
+### React (.env)
+
+```bash
+REACT_APP_PROXY_URL=http://localhost:3001
+REACT_APP_AUTOUI_SHARED_SECRET=your-secret
+```
+
+Update your config to read from `REACT_APP_*` for CRA or `VITE_*` for Vite (see the [React quick start](/docs/quickstart/react) for exact examples).
+
+### Next.js (.env.local)
+
+```bash
+NEXT_PUBLIC_PROXY_URL=http://localhost:3001
+NEXT_PUBLIC_AUTOUI_SHARED_SECRET=your-secret
+```
+
+These `NEXT_PUBLIC_*` variables are available in the browser, which is required for the chat to talk to your proxy.
+
+For how to run the proxy itself, see [Backend Proxy Installation & Configuration](/docs/backend-proxy).
+
+## 4. Integrate in a React app
+
+This is the simplest integration.
+
+```tsx
+// src/App.tsx (or your main component)
+import { ModalChat } from "@autoai-ui/autoui"
+import { createAutoUIConfig } from "./lib/autoui-config"
+
+export default function App() {
+  const config = createAutoUIConfig()
+
+  return (
+    <div className="App">
+      {/* Your existing app UI */}
+      <h1>My React App</h1>
+
+      {/* AUTOUI chat assistant */}
+      <ModalChat config={config} />
+    </div>
+  )
+}
+```
+
+When the app loads, you’ll see a floating chat button in the bottom-right corner.  
+Click it to open the chat and start talking to your assistant.
+
+For a step-by-step React-only flow, see the [React Quick Start](/docs/quickstart/react).
+
+## 5. Integrate in a Next.js app
+
+Next.js has **SSR** (server‑side rendering), so `ModalChat` **must** be dynamically imported with `ssr: false`.
+
+### 5.1 Create a reusable `AutoUIChat` wrapper (recommended)
+
+```tsx
+// app/components/autoui-chat.tsx or components/autoui-chat.tsx
+"use client"
+
+import { ModalChat } from "@autoai-ui/autoui"
+import dynamic from "next/dynamic"
+import { useRouter } from "next/navigation"
+import { useMemo } from "react"
+import { createAutoUIConfig } from "@/lib/autoui-config"
+
+// Disable SSR for ModalChat
+const DynamicModalChat = dynamic(
+  () => Promise.resolve(ModalChat),
+  { ssr: false }
+)
+
+export function AutoUIChat() {
+  const router = useRouter()
+
+  const config = useMemo(
+    () => createAutoUIConfig(router),
+    [router]
+  )
+
+  return <DynamicModalChat config={config} />
+}
+```
+
+This wrapper:
+
+- Marks the component as a **client** component
+- Uses `dynamic(..., { ssr: false })` to avoid SSR issues
+- Injects the Next.js `router` into your config so functions like `navigateToPage` can call `router.push(...)`
+
+### 5.2 App Router – mount globally in `app/layout.tsx`
+
+```tsx
+// app/layout.tsx
+import type { Metadata } from "next"
+import { AutoUIChat } from "@/components/autoui-chat"
+
+export const metadata: Metadata = {
+  title: "My App",
+}
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <html lang="en">
+      <body>
+        {children}
+        {/* Global AUTOUI chat assistant */}
+        <AutoUIChat />
+      </body>
+    </html>
+  )
+}
+```
+
+Now the chat is available on every page of your Next.js app.
+
+### 5.3 Pages Router – mount in `_app.tsx`
+
+```tsx
+// pages/_app.tsx
+import type { AppProps } from "next/app"
+import { AutoUIChat } from "@/components/autoui-chat"
+
+export default function App({ Component, pageProps }: AppProps) {
+  return (
+    <>
+      <Component {...pageProps} />
+      <AutoUIChat />
+    </>
+  )
+}
+```
+
+For more detailed Next.js patterns (server actions, middleware, etc.), see [Next.js Best Practices](/docs/best-practices/nextjs).
+
+## 6. Common gotchas
+
+- **Hydration errors in Next.js**  
+  Make sure `ModalChat` is **only** used inside a client component and imported via `dynamic(..., { ssr: false })`.
+
+- **No responses / network errors**  
+  Check that your **proxy URL** is correct and the server is running, and that the shared secret matches on both client and server.
+
+- **Config not updating**  
+  If your config depends on props/state, wrap it in `useMemo` so it doesn’t recreate on every render.
+
+```tsx
+const config = useMemo(
+  () => createAutoUIConfig(router),
+  [router]
+)
+```
+
+## 7. Where to go next
+
+- Full **Next.js quick start**: [Next.js Quick Start](/docs/quickstart/nextjs)
+- Full **React quick start**: [React Quick Start](/docs/quickstart/react)
+- Deep dive into **AutoUIConfig**: [AutoUIConfig Reference](/docs/reference/autouiconfig)
+- Learn more about **ModalChat** itself: [ModalChat Props Reference](/docs/reference/modalchat)
+
+

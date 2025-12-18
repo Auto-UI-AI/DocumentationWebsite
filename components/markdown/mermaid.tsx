@@ -42,3 +42,4 @@ const Mermaid = ({ chart, className }: MermaidProps) => {
 
 const MermaidMemo = React.memo(Mermaid)
 export default MermaidMemo
+

@@ -164,7 +164,7 @@ Before deploying to production, ensure:
 <StepItem title="CORS Configuration">
 Configure CORS to only allow your frontend domain:
 
-```env
+```bash
 CORS_ORIGIN=https://yourdomain.com
 ```
 
@@ -181,7 +181,7 @@ Or configure in your proxy server code to allow specific origins.
 <StepItem title="Rate Limiting">
 Enable rate limiting to prevent abuse:
 
-```env
+```bash
 RATE_LIMIT_MAX=100  # requests per minute per client
 ```
 
