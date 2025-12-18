@@ -927,34 +927,130 @@
   {
     "slug": "/quickstart",
     "title": "Quick Start",
-    "description": "",
-    "content": "",
+    "description": "Get started with AUTOUI in minutes. Choose your framework and follow the quick setup guide.",
+    "content": "Welcome to AUTOUI! This guide will help you get up and running quickly.\n\n## Choose Your Framework\n\nAUTOUI works with any React-based framework. Select your framework to see the specific setup instructions:\n\n* **[React Quick Start](/docs/quickstart/react)** - For Create React App, Vite, or any React application\n* **[Next.js Quick Start](/docs/quickstart/nextjs)** - For Next.js applications (App Router or Pages Router)\n\n## What You'll Need\n\nBefore you begin, make sure you have:\n\n* Node.js 16+ installed\n* A React application (or create one)\n* A backend proxy server (see [Backend Proxy Installation](/docs/backend-proxy) for setup)\n\n## Quick Overview\n\nAUTOUI integration involves three main steps:\n\n1. **Install the package** - Add `@autoai-ui/autoui` to your project\n2. **Create a config** - Define your app's capabilities in an `AutoUIConfig` object\n3. **Add ModalChat** - Import and render the `<ModalChat>` component\n\nReady to get started? Choose your framework above!\n",
     "_searchMeta": {
-      "cleanContent": "",
-      "headings": [],
-      "keywords": []
+      "cleanContent": "welcome to autoui this guide will help you get up and running quickly choose your framework autoui works with any react-based framework select your framework to see the specific setup instructions: react quick start - for create react app vite or any react application next js quick start - for next js applications app router or pages router what you ll need before you begin make sure you have: node js 16 installed a react application or create one a backend proxy server see backend proxy installation for setup quick overview autoui integration involves three main steps: install the package - add autoai-ui autoui to your project create a config - define your app s capabilities in an autouiconfig object add modalchat - import and render the modalchat component ready to get started choose your framework above",
+      "headings": [
+        "Choose Your Framework",
+        "What You'll Need",
+        "Quick Overview"
+      ],
+      "keywords": [
+        "quickstart",
+        "getting started",
+        "setup",
+        "react",
+        "nextjs",
+        "Choose Your Framework",
+        "What You'll Need",
+        "Quick Overview",
+        "[React Quick Start](/docs/quickstart/react)",
+        "[Next.js Quick Start](/docs/quickstart/nextjs)",
+        "Install the package",
+        "Create a config",
+        "Add ModalChat",
+        "@autoai-ui/autoui",
+        "AutoUIConfig",
+        "<ModalChat>"
+      ]
     }
   },
   {
     "slug": "/quickstart/nextjs",
-    "title": "Next.js",
-    "description": "",
-    "content": "",
+    "title": "Next.js Quick Start",
+    "description": "Get AUTOUI running in your Next.js app in under 5 minutes. Step-by-step guide for Next.js applications.",
+    "content": "This guide will help you integrate AUTOUI into your Next.js application quickly.\n\n## Prerequisites\n\n* A Next.js application (App Router or Pages Router)\n* Node.js 16 or higher\n* A backend proxy server (see [Backend Proxy Setup](/docs/backend-proxy))\n\n## Step 1: Install AUTOUI\n\n```bash\nnpm install @autoai-ui/autoui\n```\n\n## Step 2: Create Your Config\n\nCreate a new file `lib/autoui-config.tsx` (note the `.tsx` extension):\n\n```tsx\n\"use client\"\r\n\r\nimport { AutoUIConfig } from \"@autoai-ui/autoui\"\r\n\r\nexport function createAutoUIConfig(): AutoUIConfig {\r\n  return {\r\n    appId: 'my-nextjs-app',\r\n    llm: {\r\n      proxyUrl: process.env.NEXT_PUBLIC_PROXY_URL || 'http://localhost:3001',\r\n      sharedSecret: process.env.NEXT_PUBLIC_SHARED_SECRET,\r\n    },\r\n    runtime: {\r\n      validateLLMOutput: true,\r\n      storeChatToLocalStorage: true,\r\n      maxSteps: 10,\r\n    },\r\n  }\r\n}\n```\n\n## Step 3: Add Environment Variables\n\nCreate or update your `.env.local` file:\n\n```env\nNEXT_PUBLIC_PROXY_URL=http://localhost:3001\r\nNEXT_PUBLIC_SHARED_SECRET=your-secret-key-here\n```\n\n## Step 4: Add ModalChat to Your Layout\n\n### For App Router (app directory)\n\nCreate or update `app/layout.tsx`:\n\n```tsx\nimport dynamic from \"next/dynamic\"\r\nimport { createAutoUIConfig } from \"@/lib/autoui-config\"\r\n\r\n// Dynamic import with SSR disabled (required!)\r\nconst ModalChat = dynamic(\r\n  () => import(\"@autoai-ui/autoui\").then((mod) => mod.ModalChat),\r\n  { ssr: false }\r\n)\r\n\r\nexport default function RootLayout({\r\n  children,\r\n}: {\r\n  children: React.ReactNode\r\n}) {\r\n  const config = createAutoUIConfig()\r\n\r\n  return (\r\n    <html lang=\"en\">\r\n      <body>\r\n        {children}\r\n        <ModalChat config={config} />\r\n      </body>\r\n    </html>\r\n  )\r\n}\n```\n\n### For Pages Router (pages directory)\n\nCreate or update `pages/_app.tsx`:\n\n```tsx\nimport dynamic from \"next/dynamic\"\r\nimport { createAutoUIConfig } from \"@/lib/autoui-config\"\r\nimport type { AppProps } from \"next/app\"\r\n\r\n// Dynamic import with SSR disabled (required!)\r\nconst ModalChat = dynamic(\r\n  () => import(\"@autoai-ui/autoui\").then((mod) => mod.ModalChat),\r\n  { ssr: false }\r\n)\r\n\r\nexport default function App({ Component, pageProps }: AppProps) {\r\n  const config = createAutoUIConfig()\r\n\r\n  return (\r\n    <>\r\n      <Component {...pageProps} />\r\n      <ModalChat config={config} />\r\n    </>\r\n  )\r\n}\n```\n\n## Step 5: Start Your App\n\n```bash\nnpm run dev\n```\n\nYou should now see a floating chat button in the bottom-right corner of your app!\n\n## Next Steps\n\n* Learn about [configuration options](/docs/config)\n* Add [functions and components](/docs/functions) to extend capabilities\n* Check out [Next.js best practices](/docs/best-practices/nextjs)\n\n## Troubleshooting\n\nIf you encounter issues:\n\n* Make sure your backend proxy server is running\n* Verify your environment variables are set correctly (must use `NEXT_PUBLIC_` prefix)\n* Ensure ModalChat is dynamically imported with `ssr: false`\n* Check the browser console for error messages\n* See the [Troubleshooting guide](/docs/troubleshooting)\n",
     "_searchMeta": {
-      "cleanContent": "",
-      "headings": [],
-      "keywords": []
+      "cleanContent": "this guide will help you integrate autoui into your next js application quickly prerequisites a next js application app router or pages router node js 16 or higher a backend proxy server see backend proxy setup step 1: install autoui step 2: create your config create a new file lib autoui-config tsx note the tsx extension : step 3: add environment variables create or update your env local file: step 4: add modalchat to your layout for app router app directory create or update app layout tsx: for pages router pages directory create or update pages _app tsx: step 5: start your app you should now see a floating chat button in the bottom-right corner of your app next steps learn about configuration options add functions and components to extend capabilities check out next js best practices troubleshooting if you encounter issues: make sure your backend proxy server is running verify your environment variables are set correctly must use nextpublic prefix ensure modalchat is dynamically imported with ssr: false check the browser console for error messages see the troubleshooting guide",
+      "headings": [
+        "Prerequisites",
+        "Step 1: Install AUTOUI",
+        "Step 2: Create Your Config",
+        "Step 3: Add Environment Variables",
+        "Step 4: Add ModalChat to Your Layout",
+        "Step 5: Start Your App",
+        "Next Steps",
+        "Troubleshooting"
+      ],
+      "keywords": [
+        "nextjs",
+        "next.js",
+        "quickstart",
+        "getting started",
+        "app router",
+        "pages router",
+        "Prerequisites",
+        "Step 1: Install AUTOUI",
+        "Step 2: Create Your Config",
+        "Step 3: Add Environment Variables",
+        "Step 4: Add ModalChat to Your Layout",
+        "Step 5: Start Your App",
+        "Next Steps",
+        "Troubleshooting",
+        "bash\nnpm install @autoai-ui/autoui",
+        "## Step 2: Create Your Config\n\nCreate a new file",
+        "(note the",
+        "extension):",
+        "tsx\n\"use client\"\r\n\r\nimport { AutoUIConfig } from \"@autoai-ui/autoui\"\r\n\r\nexport function createAutoUIConfig(): AutoUIConfig {\r\n  return {\r\n    appId: 'my-nextjs-app',\r\n    llm: {\r\n      proxyUrl: process.env.NEXT_PUBLIC_PROXY_URL || 'http://localhost:3001',\r\n      sharedSecret: process.env.NEXT_PUBLIC_SHARED_SECRET,\r\n    },\r\n    runtime: {\r\n      validateLLMOutput: true,\r\n      storeChatToLocalStorage: true,\r\n      maxSteps: 10,\r\n    },\r\n  }\r\n}",
+        "## Step 3: Add Environment Variables\n\nCreate or update your",
+        "file:",
+        "env\nNEXT_PUBLIC_PROXY_URL=http://localhost:3001\r\nNEXT_PUBLIC_SHARED_SECRET=your-secret-key-here",
+        "## Step 4: Add ModalChat to Your Layout\n\n### For App Router (app directory)\n\nCreate or update",
+        ":",
+        "tsx\nimport dynamic from \"next/dynamic\"\r\nimport { createAutoUIConfig } from \"@/lib/autoui-config\"\r\n\r\n// Dynamic import with SSR disabled (required!)\r\nconst ModalChat = dynamic(\r\n  () => import(\"@autoai-ui/autoui\").then((mod) => mod.ModalChat),\r\n  { ssr: false }\r\n)\r\n\r\nexport default function RootLayout({\r\n  children,\r\n}: {\r\n  children: React.ReactNode\r\n}) {\r\n  const config = createAutoUIConfig()\r\n\r\n  return (\r\n    <html lang=\"en\">\r\n      <body>\r\n        {children}\r\n        <ModalChat config={config} />\r\n      </body>\r\n    </html>\r\n  )\r\n}",
+        "### For Pages Router (pages directory)\n\nCreate or update",
+        "tsx\nimport dynamic from \"next/dynamic\"\r\nimport { createAutoUIConfig } from \"@/lib/autoui-config\"\r\nimport type { AppProps } from \"next/app\"\r\n\r\n// Dynamic import with SSR disabled (required!)\r\nconst ModalChat = dynamic(\r\n  () => import(\"@autoai-ui/autoui\").then((mod) => mod.ModalChat),\r\n  { ssr: false }\r\n)\r\n\r\nexport default function App({ Component, pageProps }: AppProps) {\r\n  const config = createAutoUIConfig()\r\n\r\n  return (\r\n    <>\r\n      <Component {...pageProps} />\r\n      <ModalChat config={config} />\r\n    </>\r\n  )\r\n}",
+        "## Step 5: Start Your App",
+        "bash\nnpm run dev",
+        "You should now see a floating chat button in the bottom-right corner of your app!\n\n## Next Steps\n\n* Learn about [configuration options](/docs/config)\n* Add [functions and components](/docs/functions) to extend capabilities\n* Check out [Next.js best practices](/docs/best-practices/nextjs)\n\n## Troubleshooting\n\nIf you encounter issues:\n\n* Make sure your backend proxy server is running\n* Verify your environment variables are set correctly (must use",
+        "prefix)\n* Ensure ModalChat is dynamically imported with"
+      ]
     }
   },
   {
     "slug": "/quickstart/react",
-    "title": "React",
-    "description": "",
-    "content": "",
+    "title": "React Quick Start",
+    "description": "Get AUTOUI running in your React app in under 5 minutes. Step-by-step guide for React applications.",
+    "content": "This guide will help you integrate AUTOUI into your React application quickly.\n\n## Prerequisites\n\n* A React application (Create React App, Vite, or any React setup)\n* Node.js 16 or higher\n* A backend proxy server (see [Backend Proxy Setup](/docs/backend-proxy))\n\n## Step 1: Install AUTOUI\n\n```bash\nnpm install @autoai-ui/autoui\n```\n\n## Step 2: Create Your Config\n\nCreate a new file `lib/autoui-config.ts`:\n\n```tsx\nimport { AutoUIConfig } from \"@autoai-ui/autoui\"\r\n\r\nexport function createAutoUIConfig(): AutoUIConfig {\r\n  return {\r\n    appId: 'my-react-app',\r\n    llm: {\r\n      proxyUrl: process.env.REACT_APP_PROXY_URL || 'http://localhost:3001',\r\n      sharedSecret: process.env.REACT_APP_SHARED_SECRET,\r\n    },\r\n    runtime: {\r\n      validateLLMOutput: true,\r\n      storeChatToLocalStorage: true,\r\n      maxSteps: 10,\r\n    },\r\n  }\r\n}\n```\n\n## Step 3: Add Environment Variables\n\nCreate or update your `.env` file:\n\n```env\nREACT_APP_PROXY_URL=http://localhost:3001\r\nREACT_APP_SHARED_SECRET=your-secret-key-here\n```\n\n## Step 4: Add ModalChat to Your App\n\nImport and render the ModalChat component in your main app file:\n\n```tsx\n// App.tsx or your main component\r\nimport { ModalChat } from \"@autoai-ui/autoui\"\r\nimport { createAutoUIConfig } from \"./lib/autoui-config\"\r\n\r\nfunction App() {\r\n  const config = createAutoUIConfig()\r\n\r\n  return (\r\n    <div className=\"App\">\r\n      <h1>My React App</h1>\r\n      {/* Your app content */}\r\n      \r\n      <ModalChat config={config} />\r\n    </div>\r\n  )\r\n}\r\n\r\nexport default App\n```\n\n## Step 5: Start Your App\n\n```bash\nnpm start\n```\n\nYou should now see a floating chat button in the bottom-right corner of your app!\n\n## Next Steps\n\n* Learn about [configuration options](/docs/config)\n* Add [functions and components](/docs/functions) to extend capabilities\n* Check out [React best practices](/docs/best-practices/react)\n\n## Troubleshooting\n\nIf you encounter issues:\n\n* Make sure your backend proxy server is running\n* Verify your environment variables are set correctly\n* Check the browser console for error messages\n* See the [Troubleshooting guide](/docs/troubleshooting)\n",
     "_searchMeta": {
-      "cleanContent": "",
-      "headings": [],
-      "keywords": []
+      "cleanContent": "this guide will help you integrate autoui into your react application quickly prerequisites a react application create react app vite or any react setup node js 16 or higher a backend proxy server see backend proxy setup step 1: install autoui step 2: create your config create a new file lib autoui-config ts: step 3: add environment variables create or update your env file: step 4: add modalchat to your app import and render the modalchat component in your main app file: step 5: start your app you should now see a floating chat button in the bottom-right corner of your app next steps learn about configuration options add functions and components to extend capabilities check out react best practices troubleshooting if you encounter issues: make sure your backend proxy server is running verify your environment variables are set correctly check the browser console for error messages see the troubleshooting guide",
+      "headings": [
+        "Prerequisites",
+        "Step 1: Install AUTOUI",
+        "Step 2: Create Your Config",
+        "Step 3: Add Environment Variables",
+        "Step 4: Add ModalChat to Your App",
+        "Step 5: Start Your App",
+        "Next Steps",
+        "Troubleshooting"
+      ],
+      "keywords": [
+        "react",
+        "quickstart",
+        "getting started",
+        "create react app",
+        "vite",
+        "Prerequisites",
+        "Step 1: Install AUTOUI",
+        "Step 2: Create Your Config",
+        "Step 3: Add Environment Variables",
+        "Step 4: Add ModalChat to Your App",
+        "Step 5: Start Your App",
+        "Next Steps",
+        "Troubleshooting",
+        "bash\nnpm install @autoai-ui/autoui",
+        "## Step 2: Create Your Config\n\nCreate a new file",
+        ":",
+        "tsx\nimport { AutoUIConfig } from \"@autoai-ui/autoui\"\r\n\r\nexport function createAutoUIConfig(): AutoUIConfig {\r\n  return {\r\n    appId: 'my-react-app',\r\n    llm: {\r\n      proxyUrl: process.env.REACT_APP_PROXY_URL || 'http://localhost:3001',\r\n      sharedSecret: process.env.REACT_APP_SHARED_SECRET,\r\n    },\r\n    runtime: {\r\n      validateLLMOutput: true,\r\n      storeChatToLocalStorage: true,\r\n      maxSteps: 10,\r\n    },\r\n  }\r\n}",
+        "## Step 3: Add Environment Variables\n\nCreate or update your",
+        "file:",
+        "env\nREACT_APP_PROXY_URL=http://localhost:3001\r\nREACT_APP_SHARED_SECRET=your-secret-key-here",
+        "## Step 4: Add ModalChat to Your App\n\nImport and render the ModalChat component in your main app file:",
+        "tsx\n// App.tsx or your main component\r\nimport { ModalChat } from \"@autoai-ui/autoui\"\r\nimport { createAutoUIConfig } from \"./lib/autoui-config\"\r\n\r\nfunction App() {\r\n  const config = createAutoUIConfig()\r\n\r\n  return (\r\n    <div className=\"App\">\r\n      <h1>My React App</h1>\r\n      {/* Your app content */}\r\n      \r\n      <ModalChat config={config} />\r\n    </div>\r\n  )\r\n}\r\n\r\nexport default App",
+        "## Step 5: Start Your App",
+        "bash\nnpm start"
+      ]
     }
   },
   {

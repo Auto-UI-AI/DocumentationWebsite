@@ -60,12 +60,11 @@ function findPageByTopic(topic: string) {
 // Create config factory that uses router
 export function createAutoUIConfig(router: AppRouterInstance): AutoUIConfig {
   const sharedSecret = process.env.NEXT_PUBLIC_AUTOUI_SHARED_SECRET
-  const aiModel = process.env.NEXT_PUBLIC_AIMODEL_NAME || 'openai/gpt-4o'
   const proxyUrl = process.env.NEXT_PUBLIC_PROXY_URL || process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3001'
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL
 
   return {
-    appId: 'autoui-documentation',
+    appId: 'tasks-demo',
     
     metadata: {
       appName: 'AUTOUI Documentation',
@@ -77,10 +76,8 @@ export function createAutoUIConfig(router: AppRouterInstance): AutoUIConfig {
     },
 
     llm: {
-      provider: 'openrouter',
       proxyUrl: proxyUrl,
       sharedSecret: sharedSecret,
-      model: aiModel,
       temperature: 0.3,
       appDescriptionPrompt: 'AUTOUI Documentation Assistant - helps users navigate the documentation, find information about AUTOUI library features, understand how to use ModalChat, configure AutoUIConfig, register functions and components, and learn about styling and advanced features.',
       maxTokens: 2048,
