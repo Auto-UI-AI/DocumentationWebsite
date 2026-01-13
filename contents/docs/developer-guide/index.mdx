@@ -1,6 +1,10 @@
+---
+title: Complete Developer Guide
+description: Comprehensive guide to AutoUI library - installation, configuration, schema generation, and advanced features.
+keywords: ["developer guide", "complete guide", "autoui", "installation", "configuration", "vite plugin", "schema"]
+---
+
 # AutoUI Library - Complete Developer Guide
-
-
 
 ## Overview
 
@@ -25,15 +29,12 @@ AutoUI works by:
 Install AutoUI from npm:
 
 ```bash
-
 npm install @autoai-ui/autoui
-
 ```
 
 **Peer Dependencies:**
 
 - React >= 19.0.0 < 20.0.0
-
 - React DOM >= 19.0.0 < 20.0.0
 
 ---
@@ -42,35 +43,35 @@ npm install @autoai-ui/autoui
 
 ### Step 1: Create Your App Registration
 
-Before integrating AutoUI into your application, you need to register your app with the AutoUI service:
+Before integrating AutoUI into your application, you need to register your app with the AutoUI service. You have **two options**:
 
-1. Visit the AutoUI developer portal (your documentation website endpoint)
+**Option A: Use AutoUI's Deployed Service (Recommended)**
 
-2. Create a new app registration
+Visit the [AutoUI Service Portal](https://autoui-chi.vercel.app/) to generate:
+- **`appId`**: A unique identifier for your application (e.g., `app_1768313360453_dbptv83`)
+- **`shared_secret`**: A secret key used for authenticating requests to the LLM proxy
 
-3. You will receive:
+This service handles the proxy for you—no backend installation or setup required. Simply use the generated credentials in your config.
 
-   - **`appId`**: A unique identifier for your application (e.g., `app_1768313360453_dbptv83`)
+**Option B: Self-Hosted Backend**
 
-   - **`shared_secret`**: A secret key used for authenticating requests to the LLM proxy
+If you prefer to run your own backend, see the [Backend Proxy Installation & Configuration](/docs/backend-proxy) guide. You'll need to clone the backend repository and set up your own proxy server.
+
+For this guide, we'll assume you're using Option A (the deployed service).
 
 ### Step 2: Configure Environment Variables
 
 Add the `AUTOUI_APP_ID` to your project's environment file (`.env`, `.env.local`, or `.env.development`):
 
-```env
-
+```bash
 AUTOUI_APP_ID=app_1768313360453_dbptv83
-
 ```
 
 **Optional Environment Variables:**
 
 - `AUTOUI_VERSION`: Version string for your app (defaults to `1.0.0`)
-
-- `VITE_BASE_URL`: Your LLM proxy URL (if using Vite)
-
-- `VITE_AUTOUI_SHARED_SECRET`: Your shared secret for proxy authentication
+- `VITE_BASE_URL`: Your LLM proxy URL (if using Vite). Use `https://autoui-chi.vercel.app` for the deployed service, or your own proxy URL
+- `VITE_AUTOUI_SHARED_SECRET`: Your shared secret for proxy authentication (from the service portal or your own backend)
 
 The plugin automatically reads these environment variables during development builds.
 
@@ -79,45 +80,28 @@ The plugin automatically reads these environment variables during development bu
 Add the AutoUI type schema plugin to your `vite.config.ts`:
 
 ```typescript
-
 import { defineConfig } from 'vite';
-
 import react from '@vitejs/plugin-react';
-
 import { autouiTypeSchemaPlugin } from '@autoai-ui/autoui/plugin';
 
 export default defineConfig({
-
   plugins: [
-
     react(),
-
     autouiTypeSchemaPlugin({
-
       // Optional: Override appId from env
-
       // appId: 'your-app-id',
-
       // Optional: Override version from env
-
       // version: '1.0.0',
-
       // Optional: Custom schema file path
-
       // runtimeSchemaFile: '.autoui-runtime-schema.json',
-
     }),
-
   ],
-
 });
-
 ```
 
 **Plugin Behavior:**
 
 - **Development Mode**: The plugin scans your TypeScript source files, extracts type information from registered components and functions, and generates the `.autoui-runtime-schema.json` file
-
 - **Production Mode**: The plugin skips schema generation and uses the existing schema file (which should be committed to your repository)
 
 ### Step 4: Create Your AutoUI Configuration
@@ -125,153 +109,86 @@ export default defineConfig({
 Create a configuration file (e.g., `autoui.config.ts`) that defines your app's capabilities:
 
 ```typescript
-
 import type { AutoUIConfig } from '@autoai-ui/autoui';
-
 import { ModalChat } from '@autoai-ui/autoui';
 
 const proxyUrl = import.meta.env.VITE_BASE_URL;
-
 const sharedSecret = import.meta.env.VITE_AUTOUI_SHARED_SECRET;
 
 export const autouiConfig: AutoUIConfig = {
-
   // Required: Your app ID (from registration)
-
   appId: import.meta.env.AUTOUI_APP_ID || 'your-app-id',
 
   // LLM Configuration
-
   llm: {
-
     proxyUrl: proxyUrl, // Your LLM proxy endpoint
-
     sharedSecret: sharedSecret, // Optional: For proxy authentication
-
     temperature: 0.7, // Optional: LLM temperature hint
-
     maxTokens: 2048, // Optional: Max tokens hint
-
     appDescriptionPrompt: 'A brief description of what your app does',
-
     requestHeaders: { // Optional: Custom headers
-
       'HTTP-Referer': 'https://yourdomain.com',
-
       'X-Title': 'Your App Name',
-
     },
-
   },
 
   // Runtime Configuration
-
   runtime: {
-
     validateLLMOutput: true, // Validate LLM responses against schema
-
     storeChatToLocalStorage: true, // Persist chat history
-
     localStorageKey: 'autoui_chat_history', // Storage key
-
     enableDebugLogs: true, // Enable debug logging
-
     maxSteps: 20, // Maximum instruction steps per conversation
-
     errorHandling: {
-
       showToUser: true, // Display errors to users
-
       retryOnFail: true, // Retry failed operations
-
     },
-
     runtimeSchemaPath: '.autoui-runtime-schema.json', // Optional: Custom schema path
-
   },
 
   // Function Definitions
-
   functions: {
-
     fetchProducts: {
-
       prompt: 'Fetch a list of products filtered by category or search query',
-
       params: {
-
         category: 'string (optional) — product category',
-
         q: 'string (optional) — search query',
-
       },
-
       returns: 'Product[] — array of products',
-
       callFunc: async ({ category, q }) => {
-
         // Your implementation
-
         return products;
-
       },
-
       tags: ['products', 'search'],
-
     },
-
     // ... more functions
-
   },
 
   // Component Definitions
-
   components: {
-
     ProductGallery: {
-
       prompt: 'Display a gallery of products in a grid layout',
-
       props: {
-
         products: 'Product[] — array of products to display',
-
       },
-
       callComponent: ProductGallery, // Your React component
-
       defaults: {
-
         products: [],
-
       },
-
       category: 'display',
-
       tags: ['products', 'gallery'],
-
     },
-
     // ... more components
-
   },
 
   // Optional Metadata
-
   metadata: {
-
     appName: 'Your App Name',
-
     appVersion: '1.0.0',
-
     description: 'Description of your application',
-
     tags: ['ecommerce', 'react', 'autoui'],
-
   },
-
 };
-
 ```
 
 ### Step 5: Integrate ChatModal Component
@@ -279,43 +196,27 @@ export const autouiConfig: AutoUIConfig = {
 Import and use the `ModalChat` component in your application:
 
 ```typescript
-
 import { ModalChat } from '@autoai-ui/autoui';
-
 import { autouiConfig } from './autoui.config';
 
 function App() {
-
   return (
-
     <div>
-
       <h1>My Application</h1>
-
       {/* Your app content */}
-
       
-
       {/* AutoUI Chat Modal */}
-
       <ModalChat config={autouiConfig} />
-
     </div>
-
   );
-
 }
-
 ```
 
 The `ModalChat` component provides:
 
 - A floating chat button that opens/closes the chat interface
-
 - A chat interface that communicates with your LLM proxy
-
 - Automatic rendering of components and execution of functions based on user conversations
-
 - Chat history persistence (if enabled)
 
 ---
@@ -327,23 +228,14 @@ The `ModalChat` component provides:
 The main configuration object that defines your app's capabilities:
 
 ```typescript
-
 interface AutoUIConfig {
-
   appId: string; // Required: Your app ID from registration
-
   llm: LLMConfig; // Required: LLM proxy configuration
-
   runtime: RuntimeConfig; // Required: Runtime behavior settings
-
   functions: Record<string, AutoUIFunction>; // Required: Function definitions
-
   components: Record<string, AutoUIComponent>; // Required: Component definitions
-
   metadata?: AutoUIMetadata; // Optional: App metadata
-
 }
-
 ```
 
 ### LLMConfig
@@ -351,23 +243,14 @@ interface AutoUIConfig {
 Configuration for the LLM proxy connection:
 
 ```typescript
-
 interface LLMConfig {
-
   proxyUrl: string; // Required: Backend proxy URL
-
   sharedSecret?: string; // Optional: Shared secret for proxy auth
-
   temperature?: number; // Optional: Sampling temperature (hint only)
-
   maxTokens?: number; // Optional: Max tokens (hint only)
-
   appDescriptionPrompt?: string; // Optional: App description context
-
   requestHeaders?: Record<string, string>; // Optional: Headers forwarded to proxy
-
 }
-
 ```
 
 **Purpose**: Configures how AutoUI communicates with your LLM proxy service. The `proxyUrl` is the endpoint where user messages are sent, and the proxy returns instructions for rendering components or calling functions.
@@ -377,31 +260,18 @@ interface LLMConfig {
 Configuration for runtime behavior:
 
 ```typescript
-
 interface RuntimeConfig {
-
   validateLLMOutput?: boolean; // Validate LLM JSON output against schema
-
   storeChatToLocalStorage?: boolean; // Persist chat history
-
   localStorageKey?: string; // Key for localStorage
-
   enableDebugLogs?: boolean; // Enable internal debug logging
-
   maxSteps?: number; // Maximum instruction steps allowed
-
   errorHandling?: {
-
     showToUser?: boolean; // Display errors to users
-
     retryOnFail?: boolean; // Retry failed operations
-
   };
-
   runtimeSchemaPath?: string; // Path to runtime schema file (default: '.autoui-runtime-schema.json')
-
 }
-
 ```
 
 **Purpose**: Controls how AutoUI behaves at runtime, including error handling, persistence, validation, and debugging options.
@@ -411,25 +281,15 @@ interface RuntimeConfig {
 Defines a callable function that the LLM can invoke:
 
 ```typescript
-
 interface AutoUIFunction {
-
   prompt: string; // Required: Description for LLM to decide when/how to call
-
   params?: Record<string, string>; // Optional: Parameter descriptions
-
   returns?: string; // Optional: Return type description
-
   callFunc: Function; // Required: The actual function implementation
-
   exampleUsage?: string; // Optional: Example usage for LLM context
-
   tags?: string[]; // Optional: Tags for organization
-
   canShareDataWithLLM?: boolean; // Optional: Whether function data can be shared with LLM
-
 }
-
 ```
 
 **Purpose**: Registers functions that the LLM can call based on user requests. The `prompt` field is crucial—it tells the LLM when and how to use this function. The `callFunc` is the actual implementation that gets executed.
@@ -437,33 +297,19 @@ interface AutoUIFunction {
 **Example:**
 
 ```typescript
-
 functions: {
-
   getUserProfile: {
-
     prompt: 'Get the current user profile information',
-
     params: {
-
       userId: 'string — user ID to fetch',
-
     },
-
     returns: 'UserProfile — user profile object',
-
     callFunc: async ({ userId }) => {
-
       const response = await fetch(`/api/users/${userId}`);
-
       return response.json();
-
     },
-
   },
-
 }
-
 ```
 
 ### AutoUIComponent
@@ -471,27 +317,16 @@ functions: {
 Defines a React component that the LLM can render:
 
 ```typescript
-
 interface AutoUIComponent {
-
   prompt: string; // Required: Description for LLM to decide when/how to render
-
   props?: Record<string, string>; // Optional: Prop descriptions
-
   callComponent: ComponentType<any>; // Required: The React component
-
   defaults?: Record<string, any>; // Optional: Default prop values
-
   callbacks?: Record<string, AutoUICallback | Function>; // Optional: Callback handlers
-
   exampleUsage?: string; // Optional: Example JSX usage
-
   category?: string; // Optional: Component category
-
   tags?: string[]; // Optional: Tags for organization
-
 }
-
 ```
 
 **Purpose**: Registers React components that the LLM can render based on user requests. The `prompt` describes what the component does, and `props` describes the component's interface.
@@ -499,35 +334,20 @@ interface AutoUIComponent {
 **Example:**
 
 ```typescript
-
 components: {
-
   ProductCard: {
-
     prompt: 'Display a single product card with image, name, price, and add to cart button',
-
     props: {
-
       product: 'Product — product object with id, name, price, image',
-
       onAddToCart: 'function(productId: string) — callback when add to cart is clicked',
-
     },
-
     callComponent: ProductCard,
-
     defaults: {
-
       product: { id: '', name: '', price: 0, image: '' },
-
     },
-
     category: 'display',
-
   },
-
 }
-
 ```
 
 ### AutoUICallback
@@ -535,19 +355,12 @@ components: {
 Defines callbacks that components can use:
 
 ```typescript
-
 interface AutoUICallback {
-
   description: string; // Required: What this callback does
-
   whenToUse?: string; // Optional: When to use this callback
-
   example?: string; // Optional: Example usage
-
   callFunc: Function; // Required: The callback implementation
-
 }
-
 ```
 
 **Purpose**: Defines callback functions that components can use for user interactions (e.g., button clicks, form submissions).
@@ -557,23 +370,14 @@ interface AutoUICallback {
 Optional metadata about your application:
 
 ```typescript
-
 interface AutoUIMetadata {
-
   appName: string; // Required: Application name
-
   appVersion?: string; // Optional: Version string
-
   author?: string; // Optional: Author name
-
   createdAt?: string; // Optional: Creation date
-
   description?: string; // Optional: App description
-
   tags?: string[]; // Optional: Tags for categorization
-
 }
-
 ```
 
 **Purpose**: Provides metadata about your application for documentation and organization purposes.
@@ -589,11 +393,8 @@ The `.autoui-runtime-schema.json` file is automatically generated by the AutoUI 
 ### Purpose
 
 1. **Type Safety**: Provides a complete type definition of all registered components and functions
-
 2. **LLM Context**: The schema is sent to the LLM proxy to help it understand your app's structure
-
 3. **Validation**: Used at runtime to validate LLM responses before executing functions or rendering components
-
 4. **Documentation**: Serves as a machine-readable documentation of your app's capabilities
 
 ### Structure
@@ -601,135 +402,76 @@ The `.autoui-runtime-schema.json` file is automatically generated by the AutoUI 
 The schema file has the following structure:
 
 ```json
-
 {
-
   "appId": "app_1768313360453_dbptv83",
-
   "version": "1.0.0",
-
   "generatedAt": "2026-01-13T15:59:08.897Z",
-
   "types": {
-
     "Product": {
-
       "type": "object",
-
       "properties": {
-
         "id": { "type": "string", "required": true },
-
         "name": { "type": "string", "required": true },
-
         "price": { "type": "number", "required": true }
-
       },
-
       "refs": ["string", "number"]
-
     },
-
     "Product[]": {
-
       "type": "array",
-
       "items": { "type": "Product" },
-
       "refs": ["Product"]
-
     }
-
   },
-
   "components": [
-
     {
-
       "name": "ProductGallery",
-
       "props": {
-
         "products": {
-
           "type": "Product[]",
-
           "required": true
-
         }
-
       }
-
     }
-
   ],
-
   "functions": [
-
     {
-
       "name": "fetchProducts",
-
       "params": {
-
         "params": {
-
           "type": "FetchProductsParams",
-
           "required": false
-
         }
-
       },
-
       "returns": {
-
         "type": "Promise<Product[]>"
-
       }
-
     }
-
   ]
-
 }
-
 ```
 
 ### How it's Generated
 
 1. **Type Extraction**: The plugin uses `ts-morph` to parse your TypeScript project
-
 2. **Registration Discovery**: It finds components and functions registered using `autouiRegisterComponentPropsSchema` and `autouiRegisterFunctionParamsSchema`
-
 3. **Type Resolution**: It extracts and resolves all TypeScript types, including:
-
    - Primitives (string, number, boolean)
-
    - Objects and interfaces
-
    - Arrays
-
    - Unions and intersections
-
    - Generic types
-
 4. **Schema Creation**: It generates a JSON schema with complete type information
 
 ### When is it Generated?
 
 - **Development**: Generated automatically on each build start
-
 - **Production**: Not generated; uses the committed schema file
 
 ### Best Practices
 
 1. **Commit the Schema**: Always commit `.autoui-runtime-schema.json` to your repository
-
 2. **Version Control**: The schema should match your code—if you change component props or function signatures, regenerate the schema
-
 3. **CI/CD**: In production builds, the plugin skips generation and uses the committed schema
-
 4. **Review Changes**: Review schema changes in pull requests to ensure they match your code changes
 
 ---
@@ -739,17 +481,13 @@ The schema file has the following structure:
 To register components and functions for schema extraction, use the registration utilities:
 
 ```typescript
-
 import { autouiRegisterComponentPropsSchema, autouiRegisterFunctionParamsSchema } from '@autoai-ui/autoui';
 
 // Register a component's props type
-
 autouiRegisterComponentPropsSchema('ProductCard', ProductCardProps);
 
 // Register a function's parameter and return types
-
 autouiRegisterFunctionParamsSchema('fetchProducts', FetchProductsParams, Product[]);
-
 ```
 
 These registrations help the plugin extract accurate type information during build time.
@@ -761,63 +499,40 @@ These registrations help the plugin extract accurate type information during bui
 ### Basic Chat Integration
 
 ```typescript
-
 import { ModalChat } from '@autoai-ui/autoui';
-
 import { autouiConfig } from './autoui.config';
 
 function App() {
-
   return (
-
     <>
-
       <YourAppContent />
-
       <ModalChat config={autouiConfig} />
-
     </>
-
   );
-
 }
-
 ```
 
 ### Custom Portal Container
 
 ```typescript
-
 <ModalChat 
-
   config={autouiConfig} 
-
   portalContainer={document.getElementById('chat-container')} 
-
 />
-
 ```
 
 ### Inline Chat (Non-Modal)
 
 ```typescript
-
 import { Chat } from '@autoai-ui/autoui';
 
 function App() {
-
   return (
-
     <div>
-
       <Chat config={autouiConfig} title="AI Assistant" />
-
     </div>
-
   );
-
 }
-
 ```
 
 ---
@@ -827,63 +542,40 @@ function App() {
 ### Custom Error Handling
 
 ```typescript
-
 runtime: {
-
   errorHandling: {
-
     showToUser: true,
-
     retryOnFail: true,
-
   },
-
 }
-
 ```
 
 ### Chat History Persistence
 
 ```typescript
-
 runtime: {
-
   storeChatToLocalStorage: true,
-
   localStorageKey: 'my_app_chat_history',
-
 }
-
 ```
 
 ### Debug Logging
 
 ```typescript
-
 runtime: {
-
   enableDebugLogs: true, // Logs LLM requests/responses and execution steps
-
 }
-
 ```
 
 ### Custom Request Headers
 
 ```typescript
-
 llm: {
-
   requestHeaders: {
-
     'X-Custom-Header': 'value',
-
     'Authorization': 'Bearer token',
-
   },
-
 }
-
 ```
 
 ---
@@ -893,41 +585,29 @@ llm: {
 ### Schema Not Generated
 
 - Ensure the plugin is added to `vite.config.ts`
-
 - Check that you have a `tsconfig.json` or `tsconfig.app.json` file
-
 - Verify components/functions are registered using the registration utilities
-
 - Check console for plugin error messages
 
 ### LLM Not Understanding Your App
 
 - Improve `prompt` descriptions in your config
-
 - Add more detailed `params` and `props` descriptions
-
 - Ensure `appDescriptionPrompt` accurately describes your app
-
 - Review the generated schema file to ensure types are correct
 
 ### Functions Not Being Called
 
 - Verify function `prompt` clearly describes when to use it
-
 - Check function registration in the schema file
-
 - Enable debug logs to see LLM decision-making
-
 - Ensure function signatures match the schema
 
 ### Components Not Rendering
 
 - Verify component `prompt` clearly describes when to render it
-
 - Check component registration in the schema file
-
 - Ensure component props match the schema
-
 - Review LLM response in debug logs
 
 ---
@@ -937,9 +617,7 @@ llm: {
 AutoUI provides full TypeScript support:
 
 ```typescript
-
 import type { AutoUIConfig, AutoUIFunction, AutoUIComponent } from '@autoai-ui/autoui';
-
 ```
 
 All configuration interfaces are fully typed, providing autocomplete and type checking in your IDE.
@@ -951,15 +629,11 @@ All configuration interfaces are fully typed, providing autocomplete and type ch
 AutoUI enables you to build AI-powered chat interfaces by:
 
 1. **Installing** the library from npm
-
 2. **Registering** your app to get `appId` and `shared_secret`
-
 3. **Configuring** environment variables (`AUTOUI_APP_ID`)
-
 4. **Adding** the Vite plugin to extract types and generate schema
-
 5. **Creating** a config that defines your functions and components
-
 6. **Integrating** the `ModalChat` component into your app
 
 The plugin automatically generates `.autoui-runtime-schema.json` which describes your app's capabilities, enabling the LLM to understand and interact with your application intelligently.
+

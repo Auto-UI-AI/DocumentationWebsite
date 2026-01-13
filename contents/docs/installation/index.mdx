@@ -1,10 +1,10 @@
 ---
 title: Quick Installation & Configuration
 description: Install AUTOUI and get it running in your app quickly.
-keywords: ["installation", "setup", "quick"]
+keywords: ["installation", "setup", "quick", "vite plugin", "schema"]
 ---
 
-Get AUTOUI running in 3 steps.
+This guide provides a quick overview of installing and configuring AUTOUI. For a comprehensive setup guide with detailed explanations, see the [Complete Developer Guide](/docs/developer-guide).
 
 ## Step 1: Install
 
@@ -12,28 +12,117 @@ Get AUTOUI running in 3 steps.
 npm install @autoai-ui/autoui
 ```
 
-## Step 2: Basic Config
+**Peer Dependencies:**
+- React >= 19.0.0 < 20.0.0
+- React DOM >= 19.0.0 < 20.0.0
 
-Create your config file:
+## Step 2: Create Your App Registration
 
-**React:**
+You have two options for the backend proxy:
+
+### Option A: Use AutoUI's Deployed Service (Recommended)
+
+Visit the [AutoUI Service Portal](https://autoui-chi.vercel.app/) to generate:
+- **`appId`**: A unique identifier for your application
+- **`shared_secret`**: A secret key for authenticating requests to the LLM proxy
+
+This service handles the proxy for you—no backend installation or setup required. Simply use the generated credentials in your config.
+
+### Option B: Self-Hosted Backend
+
+If you prefer to run your own backend, see the [Backend Proxy Installation & Configuration](/docs/backend-proxy) guide. You'll need to:
+1. Clone and set up the AutoUI backend repository
+2. Configure your own proxy server
+3. Use your proxy server URL in the config
+
+For this guide, we'll assume you're using Option A (the deployed service).
+
+## Step 3: Configure Environment Variables
+
+Add the following to your `.env`, `.env.local`, or `.env.development` file:
+
+**If using AutoUI's deployed service:**
+- Get your `appId` and `shared_secret` from [autoui-chi.vercel.app](https://autoui-chi.vercel.app/)
+- Use the service URL as your `proxyUrl`
+
+**For Vite/React projects:**
+```bash
+AUTOUI_APP_ID=app_1768313360453_dbptv83
+VITE_BASE_URL=https://autoui-chi.vercel.app
+VITE_AUTOUI_SHARED_SECRET=your-shared-secret-from-service
+```
+
+**For Next.js:**
+```bash
+AUTOUI_APP_ID=app_1768313360453_dbptv83
+NEXT_PUBLIC_PROXY_URL=https://autoui-chi.vercel.app
+NEXT_PUBLIC_SHARED_SECRET=your-shared-secret-from-service
+```
+
+**For Create React App:**
+```bash
+AUTOUI_APP_ID=app_1768313360453_dbptv83
+REACT_APP_PROXY_URL=https://autoui-chi.vercel.app
+REACT_APP_SHARED_SECRET=your-shared-secret-from-service
+```
+
+<Note title="Self-Hosted Backend" type="info">
+If you're running your own backend proxy server, replace the `proxyUrl` with your server URL (e.g., `http://localhost:3001` for local development).
+</Note>
+
+## Step 4: Install and Configure the Vite Plugin (Vite projects only)
+
+If you're using Vite, add the AutoUI type schema plugin to your `vite.config.ts`:
+
+```typescript
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import { autouiTypeSchemaPlugin } from '@autoai-ui/autoui/plugin';
+
+export default defineConfig({
+  plugins: [
+    react(),
+    autouiTypeSchemaPlugin({
+      // Optional: Override appId from env
+      // appId: 'your-app-id',
+      // Optional: Override version from env
+      // version: '1.0.0',
+    }),
+  ],
+});
+```
+
+**Note:** The Vite plugin generates a `.autoui-runtime-schema.json` file during development builds. This file should be committed to your repository.
+
+## Step 5: Create Your AutoUI Configuration
+
+Create a configuration file (e.g., `lib/autoui-config.ts` or `lib/autoui-config.tsx`):
+
+**React/Vite:**
 ```tsx
 // lib/autoui-config.ts
-import { AutoUIConfig } from "@autoai-ui/autoui"
+import type { AutoUIConfig } from '@autoai-ui/autoui';
 
-export function createAutoUIConfig(): AutoUIConfig {
-  return {
-    appId: 'my-app',
-    llm: {
-      proxyUrl: process.env.REACT_APP_PROXY_URL || 'http://localhost:3001',
-      sharedSecret: process.env.REACT_APP_SHARED_SECRET,
-    },
-    runtime: {
-      validateLLMOutput: true,
-      storeChatToLocalStorage: true,
-    },
-  }
-}
+export const autouiConfig: AutoUIConfig = {
+  appId: import.meta.env.AUTOUI_APP_ID || 'your-app-id',
+  llm: {
+    proxyUrl: import.meta.env.VITE_BASE_URL || 'http://localhost:3001',
+    sharedSecret: import.meta.env.VITE_AUTOUI_SHARED_SECRET,
+    appDescriptionPrompt: 'A brief description of what your app does',
+  },
+  runtime: {
+    validateLLMOutput: true,
+    storeChatToLocalStorage: true,
+    enableDebugLogs: true,
+    maxSteps: 20,
+  },
+  functions: {
+    // Your functions here
+  },
+  components: {
+    // Your components here
+  },
+};
 ```
 
 **Next.js:**
@@ -41,33 +130,44 @@ export function createAutoUIConfig(): AutoUIConfig {
 // lib/autoui-config.tsx
 "use client"
 
-import { AutoUIConfig } from "@autoai-ui/autoui"
+import type { AutoUIConfig } from '@autoai-ui/autoui';
 
-export function createAutoUIConfig(): AutoUIConfig {
-  return {
-    appId: 'my-app',
-llm: {
-      proxyUrl: process.env.NEXT_PUBLIC_PROXY_URL || 'http://localhost:3001',
-      sharedSecret: process.env.NEXT_PUBLIC_SHARED_SECRET,
-    },
-    runtime: {
-      validateLLMOutput: true,
-      storeChatToLocalStorage: true,
-    },
-  }
-}
+export const autouiConfig: AutoUIConfig = {
+  appId: process.env.AUTOUI_APP_ID || 'your-app-id',
+  llm: {
+    proxyUrl: process.env.NEXT_PUBLIC_PROXY_URL || 'http://localhost:3001',
+    sharedSecret: process.env.NEXT_PUBLIC_SHARED_SECRET,
+    appDescriptionPrompt: 'A brief description of what your app does',
+  },
+  runtime: {
+    validateLLMOutput: true,
+    storeChatToLocalStorage: true,
+    enableDebugLogs: true,
+    maxSteps: 20,
+  },
+  functions: {
+    // Your functions here
+  },
+  components: {
+    // Your components here
+  },
+};
 ```
 
-## Step 3: Add ModalChat
+## Step 6: Integrate ModalChat Component
 
 **React:**
 ```tsx
-import { ModalChat } from "@autoai-ui/autoui"
-import { createAutoUIConfig } from "./lib/autoui-config"
+import { ModalChat } from '@autoai-ui/autoui';
+import { autouiConfig } from './lib/autoui-config';
 
 function App() {
-  const config = createAutoUIConfig()
-  return <ModalChat config={config} />
+  return (
+    <div>
+      <h1>My Application</h1>
+      <ModalChat config={autouiConfig} />
+    </div>
+  );
 }
 ```
 
@@ -76,37 +176,22 @@ function App() {
 "use client"
 
 import dynamic from "next/dynamic"
-import { createAutoUIConfig } from "@/lib/autoui-config"
+import { autouiConfig } from "@/lib/autoui-config"
 
 const ModalChat = dynamic(
   () => import("@autoai-ui/autoui").then(m => m.ModalChat),
-  { ssr: false }  // ← Required for Next.js
+  { ssr: false }
 )
 
 export default function App() {
-  const config = createAutoUIConfig()
-  return <ModalChat config={config} />
+  return <ModalChat config={autouiConfig} />
 }
-```
-
-## Environment Variables
-
-Create `.env` (React) or `.env.local` (Next.js):
-
-```bash
-REACT_APP_PROXY_URL=http://localhost:3001
-REACT_APP_SHARED_SECRET=your-secret
-```
-
-or
-
-```bash
-NEXT_PUBLIC_PROXY_URL=http://localhost:3001
-NEXT_PUBLIC_SHARED_SECRET=your-secret
 ```
 
 ## What's Next?
 
+- Read the [Complete Developer Guide](/docs/developer-guide) for detailed explanations
 - Set up your [Backend Proxy](/docs/backend-proxy)
 - Understand [Config Structure](/docs/config)
-- See [Quick Start Guides](/docs/quickstart) for detailed setup
+- Learn about the [Runtime Schema File](/docs/runtime#runtime-schema-file)
+- See [Quick Start Guides](/docs/quickstart) for framework-specific setup

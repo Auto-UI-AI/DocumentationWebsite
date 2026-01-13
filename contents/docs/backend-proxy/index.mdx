@@ -4,7 +4,11 @@ description: Set up the AUTOUI proxy server to securely handle LLM API keys and 
 keywords: ["proxy", "backend", "openrouter", "security", "api key", "client key"]
 ---
 
-The AUTOUI proxy server is a **required backend component** that keeps your OpenRouter API key secure on the server while allowing your frontend to communicate with LLM providers.
+<Note title="Quick Start Option" type="success">
+**Want to get started quickly?** You can use AutoUI's deployed service at [autoui-chi.vercel.app](https://autoui-chi.vercel.app/) to generate an `appId` and `shared_secret` without setting up your own backend. This guide is for developers who want to run their own proxy server.
+</Note>
+
+The AUTOUI proxy server is a **backend component** that keeps your OpenRouter API key secure on the server while allowing your frontend to communicate with LLM providers. You can either use AutoUI's deployed service or run your own proxy server.
 
 ## Why Use a Proxy?
 

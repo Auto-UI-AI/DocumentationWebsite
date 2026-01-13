@@ -25,6 +25,10 @@ export const Documents: Paths[] = [
     ],
   },
   {
+    title: "Complete Developer Guide",
+    href: "/developer-guide",
+  },
+  {
     title: "Quick Installation & Configuration",
     href: "/installation",
   },

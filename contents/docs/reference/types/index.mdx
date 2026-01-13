@@ -1,0 +1,370 @@
+---
+title: TypeScript Types Reference
+description: Complete reference for all TypeScript types and interfaces in the AutoUI library.
+keywords: ["types", "typescript", "interface", "reference", "api", "autouiconfig", "llmconfig", "runtimeconfig"]
+---
+
+This page provides a complete reference for all TypeScript types and interfaces exported by the AutoUI library.
+
+## AutoUIConfig
+
+The main configuration interface that defines your app's capabilities.
+
+```typescript
+import type { AutoUIConfig } from '@autoai-ui/autoui';
+
+export interface AutoUIConfig {
+  appId: string;
+  llm: LLMConfig;
+  runtime: RuntimeConfig;
+  functions: Record<string, AutoUIFunction>;
+  components: Record<string, AutoUIComponent>;
+  metadata?: AutoUIMetadata;
+}
+```
+
+**Fields:**
+
+- `appId` (required): Unique identifier for your application
+- `llm` (required): LLM proxy configuration
+- `runtime` (required): Runtime behavior settings
+- `functions` (required): Record of function definitions that the LLM can call
+- `components` (required): Record of component definitions that the LLM can render
+- `metadata` (optional): Application metadata
+
+## LLMConfig
+
+Configuration for the LLM proxy connection.
+
+```typescript
+export interface LLMConfig {
+  /** 🔐 Backend proxy URL */
+  proxyUrl: string;
+  /** Shared secret for proxy auth */
+  sharedSecret?: string;
+  /** Sampling temperature (hint only) */
+  temperature?: number;
+  /** Max tokens (hint only) */
+  maxTokens?: number;
+  /** App description context */
+  appDescriptionPrompt?: string;
+  /** Optional headers forwarded to proxy */
+  requestHeaders?: Record<string, string>;
+}
+```
+
+**Fields:**
+
+- `proxyUrl` (required): Backend proxy URL. Use `https://autoui-chi.vercel.app` for the deployed service, or your own proxy server URL
+- `sharedSecret` (optional): Shared secret for proxy authentication. Get this from the [AutoUI Service Portal](https://autoui-chi.vercel.app/) or generate it from your own proxy server
+- `temperature` (optional): Sampling temperature hint (0.0-2.0). The actual temperature is controlled by the proxy server
+- `maxTokens` (optional): Maximum tokens hint. The actual limit is controlled by the proxy server
+- `appDescriptionPrompt` (optional): Brief description of your app that helps the LLM understand your application's purpose
+- `requestHeaders` (optional): Custom headers to forward to the proxy server
+
+## RuntimeConfig
+
+Configuration for runtime behavior and execution settings.
+
+```typescript
+export interface RuntimeConfig {
+  /** Whether to validate LLM JSON output */
+  validateLLMOutput?: boolean;
+  /** Whether to store chat history to localStorage */
+  storeChatToLocalStorage?: boolean;
+  /** Key used for saving chat history */
+  localStorageKey?: string;
+  /** Enable internal debug logging */
+  enableDebugLogs?: boolean;
+  /** Maximum instruction steps allowed */
+  maxSteps?: number;
+  /** Error-handling policy */
+  errorHandling?: {
+    showToUser?: boolean;
+    retryOnFail?: boolean;
+  };
+  /** Path to runtime schema file (relative to project root or absolute URL) */
+  /** Default: '.autoui-runtime-schema.json' */
+  runtimeSchemaPath?: string;
+}
+```
+
+**Fields:**
+
+- `validateLLMOutput` (optional): Whether to validate LLM JSON output against the schema. Recommended: `true` for production
+- `storeChatToLocalStorage` (optional): Whether to persist chat history in localStorage
+- `localStorageKey` (optional): Key used for storing chat history in localStorage. Default: `'autoui_chat'`
+- `enableDebugLogs` (optional): Enable internal debug logging to console. Useful for development
+- `maxSteps` (optional): Maximum number of instruction steps allowed per conversation turn. Prevents infinite loops
+- `errorHandling` (optional): Error handling configuration
+  - `showToUser` (optional): Whether to display errors to users in the chat UI
+  - `retryOnFail` (optional): Whether to automatically retry failed operations
+- `runtimeSchemaPath` (optional): Path to the runtime schema file. Default: `'.autoui-runtime-schema.json'`. Can be a relative path from project root or an absolute URL
+
+## AutoUIFunction
+
+Defines a callable function that the LLM can invoke.
+
+```typescript
+export interface AutoUIFunction {
+  /** Prompt used by the LLM to decide when/how to call this function */
+  prompt: string;
+  /** Descriptive list of parameters (for documentation & LLM guidance) */
+  params?: Record<string, string>;
+  /** Description of the expected return type */
+  returns?: string;
+  /** The actual callable implementation (may be mocked) */
+  callFunc: Function;
+  /** Optional example usage or notes for LLM context */
+  exampleUsage?: string;
+  /** Optional tags for organization */
+  tags?: string[];
+  /** Whether the function can share data with the LLM for analysis */
+  canShareDataWithLLM?: boolean;
+}
+```
+
+**Fields:**
+
+- `prompt` (required): Natural language description that tells the LLM when and how to use this function. This is crucial for the LLM's decision-making
+- `params` (optional): Object describing function parameters. Keys are parameter names, values are type descriptions (e.g., `{ userId: 'string — user ID to fetch' }`)
+- `returns` (optional): Description of what the function returns (e.g., `'UserProfile — user profile object'`)
+- `callFunc` (required): The actual JavaScript function implementation. **Must return a value** (not void) so the LLM can analyze results
+- `exampleUsage` (optional): Example usage or notes to provide additional context to the LLM
+- `tags` (optional): Tags for organizing and categorizing functions
+- `canShareDataWithLLM` (optional): Whether the function's return data can be shared with the LLM for analysis. Set to `false` for sensitive data
+
+**Important:** Functions must return a value (not `void`) so the LLM can analyze the results.
+
+## AutoUIComponent
+
+Defines a React component that the LLM can render.
+
+```typescript
+import type { ComponentType } from 'react';
+
+export interface AutoUIComponent {
+  /** Prompt describing what the component does (for LLM) */
+  prompt: string;
+  /** Human-readable parameter descriptions */
+  props?: Record<string, string>;
+  /** Actual React component reference */
+  callComponent: ComponentType<any>;
+  /** Default prop values for runtime or mock previews */
+  defaults?: Record<string, any>;
+  /** Callback definitions with handlers - combines metadata and implementation */
+  callbacks?: Record<string, AutoUICallback | Function>;
+  /** Example JSX usage (string literal for docs) */
+  exampleUsage?: string;
+  /** Optional category (product-display, checkout, etc.) */
+  category?: string;
+  /** Optional tags for search or grouping */
+  tags?: string[];
+}
+```
+
+**Fields:**
+
+- `prompt` (required): Natural language description of what the component does and when to render it
+- `props` (optional): Object describing component props. Keys are prop names, values are descriptions (e.g., `{ title: 'string — component title' }`)
+- `callComponent` (required): Reference to the React component (function component or class component)
+- `defaults` (optional): Default prop values. Helps the LLM understand the expected data structure
+- `callbacks` (optional): Callback definitions. Can be `AutoUICallback` objects or direct function references
+- `exampleUsage` (optional): Example JSX usage as a string literal for documentation
+- `category` (optional): Category for grouping related components (e.g., `'product-display'`, `'checkout'`)
+- `tags` (optional): Tags for organizing and searching components
+
+## AutoUICallback
+
+Defines callbacks that components can use for user interactions.
+
+```typescript
+export interface AutoUICallback {
+  /** Description of what this callback does */
+  description: string;
+  /** When to use this callback */
+  whenToUse?: string;
+  /** Example usage */
+  example?: string;
+  /** The actual callback function implementation */
+  callFunc: Function;
+}
+```
+
+**Fields:**
+
+- `description` (required): Description of what the callback does
+- `whenToUse` (optional): Guidance on when to use this callback
+- `example` (optional): Example usage
+- `callFunc` (required): The callback function implementation
+
+## AutoUIMetadata
+
+Optional metadata about your application.
+
+```typescript
+export interface AutoUIMetadata {
+  appName: string;
+  appVersion?: string;
+  author?: string;
+  createdAt?: string;
+  description?: string;
+  tags?: string[];
+}
+```
+
+**Fields:**
+
+- `appName` (required): Name of your application
+- `appVersion` (optional): Version string (e.g., `'1.0.0'`)
+- `author` (optional): Author or team name
+- `createdAt` (optional): ISO 8601 timestamp of creation date
+- `description` (optional): Detailed description of your application
+- `tags` (optional): Tags for categorization
+
+## Instruction Plan Types
+
+These types describe the structure that the LLM response must have.
+
+### InstructionStep
+
+Union type representing a single step in an instruction plan.
+
+```typescript
+export type InstructionStep = FunctionStep | ComponentStep | TextStep;
+```
+
+### FunctionStep
+
+A step that calls a registered function.
+
+```typescript
+export type FunctionStep = {
+  type: 'function';
+  name: string;
+  params?: Record<string, any>;
+  assign?: string;
+  hasToShareDataWithLLM?: boolean;
+};
+```
+
+**Fields:**
+
+- `type`: Must be `'function'`
+- `name`: Name of the function to call (must match a key in `functions`)
+- `params`: Parameters to pass to the function
+- `assign`: Optional variable name to assign the result to
+- `hasToShareDataWithLLM`: Whether to share the function's return data with the LLM
+
+### ComponentStep
+
+A step that renders a registered component.
+
+```typescript
+export type ComponentStep = {
+  type: 'component';
+  name: string;
+  props?: Record<string, any>;
+  /** Explicit callback references - maps callback prop names to callback names from component config */
+  callbacks?: Record<string, string>;
+};
+```
+
+**Fields:**
+
+- `type`: Must be `'component'`
+- `name`: Name of the component to render (must match a key in `components`)
+- `props`: Props to pass to the component
+- `callbacks`: Maps callback prop names to callback names from the component config
+
+### TextStep
+
+A step that displays text to the user.
+
+```typescript
+export type TextStep = {
+  type: 'text';
+  text: string;
+};
+```
+
+**Fields:**
+
+- `type`: Must be `'text'`
+- `text`: Text content to display
+
+### InstructionPlan
+
+The complete plan structure returned by the LLM.
+
+```typescript
+export type InstructionPlan = {
+  type: 'sequence';
+  steps: InstructionStep[];
+};
+```
+
+**Fields:**
+
+- `type`: Must be `'sequence'`
+- `steps`: Array of instruction steps to execute in order
+
+## Usage Example
+
+```typescript
+import type { AutoUIConfig, AutoUIFunction, AutoUIComponent } from '@autoai-ui/autoui';
+
+const config: AutoUIConfig = {
+  appId: 'my-app',
+  llm: {
+    proxyUrl: 'https://autoui-chi.vercel.app',
+    sharedSecret: 'your-shared-secret',
+    appDescriptionPrompt: 'A task management application',
+  },
+  runtime: {
+    validateLLMOutput: true,
+    storeChatToLocalStorage: true,
+    maxSteps: 20,
+  },
+  functions: {
+    createTask: {
+      prompt: 'Create a new task',
+      params: {
+        title: 'string — task title',
+        description: 'string (optional) — task description',
+      },
+      returns: 'Task — the created task object',
+      callFunc: async ({ title, description }) => {
+        // Implementation
+        return { id: '1', title, description };
+      },
+      canShareDataWithLLM: true,
+    } satisfies AutoUIFunction,
+  },
+  components: {
+    TaskCard: {
+      prompt: 'Display a task card',
+      props: {
+        task: 'Task — task object to display',
+      },
+      callComponent: TaskCard,
+      defaults: {
+        task: { id: '', title: '', description: '' },
+      },
+    } satisfies AutoUIComponent,
+  },
+  metadata: {
+    appName: 'My Task App',
+    appVersion: '1.0.0',
+    description: 'A task management application',
+  },
+};
+```
+
+## Related Documentation
+
+- [AutoUIConfig Reference](/docs/reference/autouiconfig) - Detailed config reference
+- [Configuration Guide](/docs/config) - How to configure AutoUI
+- [Functions Guide](/docs/functions) - Registering functions
+- [Components Guide](/docs/components) - Registering components
+

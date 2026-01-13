@@ -4,9 +4,16 @@ description: Learn about AUTOUI, a config-driven React library that integrates A
 keywords: ["autoui", "introduction", "modalchat", "ai", "llm", "react"]
 ---
 
-AUTOUI is an npm library that integrates a ready-to-use **ModalChat** component into any React application. Instead of building chat interfaces from scratch, you provide a configuration object that describes your app's capabilities, and AUTOUI handles the rest—from LLM communication to plan execution to UI rendering.
+AutoUI is a powerful React library that enables developers to build AI-powered chat interfaces that can dynamically interact with your application's components and functions. The library uses a Large Language Model (LLM) proxy to understand user intent and automatically render React components or call functions based on natural language conversations.
 
 ## How AUTOUI Works
+
+AutoUI works by:
+
+1. **Type Extraction**: Automatically extracting TypeScript type information from your components and functions during build time
+2. **Schema Generation**: Creating a runtime schema file (`.autoui-runtime-schema.json`) that describes your app's capabilities
+3. **LLM Integration**: Sending user messages to an LLM proxy that understands your app structure and generates appropriate actions
+4. **Dynamic Rendering**: Executing function calls and rendering React components based on LLM instructions
 
 AUTOUI follows a **config-driven architecture** where your application's capabilities are defined declaratively. Here's the high-level flow:
 
@@ -27,7 +34,7 @@ ModalChat sends your `AutoUIConfig` to the proxy server, which includes:
 </StepItem>
 
 <StepItem title="3. LLM Processing">
-The proxy server forwards the request to OpenRouter (or another LLM provider) with your config. The LLM generates a structured **plan**—a JSON response that describes what actions to take.
+The proxy server forwards the request to OpenRouter with your config. The LLM generates a structured **plan**—a JSON response that describes what actions to take.
 </StepItem>
 
 <StepItem title="4. Plan Execution">
@@ -95,6 +102,12 @@ AUTOUI uses a **proxy server** pattern for security:
 - The frontend only sends a client key (shared secret)
 - The proxy handles authentication and rate limiting
 - CORS and security policies are centralized
+
+You have **two options** for the backend proxy:
+
+1. **Use AutoUI's Deployed Service** (Recommended for quick start): Visit [autoui-chi.vercel.app](https://autoui-chi.vercel.app/) to generate an `appId` and `shared_secret`. This service handles the proxy for you—no backend installation required.
+
+2. **Self-Hosted Backend**: Copy the AutoUI backend repository and run your own proxy server. Connect to it via the `proxyUrl` in your config. See [Backend Proxy Installation](/docs/backend-proxy) for setup instructions.
 
 ## When to Use AUTOUI
 
@@ -164,5 +177,5 @@ AUTOUI uses a **proxy server** pattern for security:
 
 ## Next Steps
 
-Ready to get started? Head to the [Installation & Configuration](/docs/installation) guide to set up AUTOUI in your React app.
+Ready to get started? Head to the [Complete Developer Guide](/docs/developer-guide) for comprehensive setup instructions, or check the [Quick Installation & Configuration](/docs/installation) guide for a quick start.
 

@@ -18,16 +18,54 @@ This guide will help you integrate AUTOUI into your React application quickly.
 npm install @autoai-ui/autoui
 ```
 
-## Step 2: Create Your Config
+## Step 2: Configure Vite Plugin (Vite projects only)
+
+If you're using Vite, add the AutoUI type schema plugin to your `vite.config.ts`:
+
+```typescript
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import { autouiTypeSchemaPlugin } from '@autoai-ui/autoui/plugin';
+
+export default defineConfig({
+  plugins: [
+    react(),
+    autouiTypeSchemaPlugin(),
+  ],
+});
+```
+
+This plugin generates a `.autoui-runtime-schema.json` file during development builds. Skip this step if you're using Create React App.
+
+## Step 3: Create Your Config
 
 Create a new file `lib/autoui-config.ts`:
 
+**For Vite projects:**
+```tsx
+import type { AutoUIConfig } from '@autoai-ui/autoui';
+
+export const autouiConfig: AutoUIConfig = {
+  appId: import.meta.env.AUTOUI_APP_ID || 'my-react-app',
+  llm: {
+    proxyUrl: import.meta.env.VITE_BASE_URL || 'http://localhost:3001',
+    sharedSecret: import.meta.env.VITE_AUTOUI_SHARED_SECRET,
+  },
+  runtime: {
+    validateLLMOutput: true,
+    storeChatToLocalStorage: true,
+    maxSteps: 10,
+  },
+};
+```
+
+**For Create React App:**
 ```tsx
 import { AutoUIConfig } from "@autoai-ui/autoui"
 
 export function createAutoUIConfig(): AutoUIConfig {
   return {
-    appId: 'my-react-app',
+    appId: process.env.REACT_APP_APP_ID || 'my-react-app',
     llm: {
       proxyUrl: process.env.REACT_APP_PROXY_URL || 'http://localhost:3001',
       sharedSecret: process.env.REACT_APP_SHARED_SECRET,
@@ -41,20 +79,29 @@ export function createAutoUIConfig(): AutoUIConfig {
 }
 ```
 
-## Step 3: Add Environment Variables
+## Step 4: Add Environment Variables
 
 Create or update your `.env` file:
 
+**For Vite projects:**
 ```bash
+AUTOUI_APP_ID=your-app-id
+VITE_BASE_URL=http://localhost:3001
+VITE_AUTOUI_SHARED_SECRET=your-secret-key-here
+```
+
+**For Create React App:**
+```bash
+REACT_APP_APP_ID=your-app-id
 REACT_APP_PROXY_URL=http://localhost:3001
 REACT_APP_SHARED_SECRET=your-secret-key-here
 ```
 
 <Note title="Environment Variables" type="info">
-For Create React App, environment variables must start with `REACT_APP_`. For Vite, use `VITE_` prefix instead.
+For Create React App, environment variables must start with `REACT_APP_`. For Vite, use `VITE_` prefix instead. Also note that you'll need to register your app with AutoUI service to get your `appId` and `shared_secret`. See the [Complete Developer Guide](/docs/developer-guide) for details.
 </Note>
 
-## Step 4: Add ModalChat to Your App
+## Step 5: Add ModalChat to Your App
 
 Import and render the ModalChat component in your main app file:
 
@@ -79,7 +126,7 @@ function App() {
 export default App
 ```
 
-## Step 5: Start Your App
+## Step 6: Start Your App
 
 ```bash
 npm start
@@ -89,6 +136,7 @@ You should now see a floating chat button in the bottom-right corner of your app
 
 ## Next Steps
 
+- Read the [Complete Developer Guide](/docs/developer-guide) for comprehensive setup instructions
 - Learn about [configuration options](/docs/config)
 - Add [functions and components](/docs/functions) to extend capabilities
 - Check out [React best practices](/docs/best-practices/react)

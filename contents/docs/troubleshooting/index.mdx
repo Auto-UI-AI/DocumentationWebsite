@@ -305,6 +305,70 @@ runtime: {
 </StepItem>
 </Step>
 
+### Schema Not Generated
+
+**Symptom:** The `.autoui-runtime-schema.json` file is not being generated.
+
+**Possible causes:**
+- Vite plugin not added to `vite.config.ts`
+- Missing `tsconfig.json` or `tsconfig.app.json` file
+- Components/functions not registered using registration utilities
+- Plugin errors in console
+
+**Solutions:**
+
+<Step>
+<StepItem title="Verify Plugin Configuration">
+Ensure the plugin is added to `vite.config.ts`:
+
+```typescript
+import { autouiTypeSchemaPlugin } from '@autoai-ui/autoui/plugin';
+
+export default defineConfig({
+  plugins: [
+    react(),
+    autouiTypeSchemaPlugin(),
+  ],
+});
+```
+</StepItem>
+
+<StepItem title="Check TypeScript Config">
+Verify you have a `tsconfig.json` or `tsconfig.app.json` file in your project root.
+</StepItem>
+
+<StepItem title="Register Components and Functions">
+Use the registration utilities to register your components and functions:
+
+```typescript
+import { autouiRegisterComponentPropsSchema, autouiRegisterFunctionParamsSchema } from '@autoai-ui/autoui';
+
+autouiRegisterComponentPropsSchema('ProductCard', ProductCardProps);
+autouiRegisterFunctionParamsSchema('fetchProducts', FetchProductsParams, Product[]);
+```
+</StepItem>
+
+<StepItem title="Check Console for Errors">
+Review the build console output for plugin error messages that may indicate what's wrong.
+</StepItem>
+</Step>
+
+### Schema File Out of Sync
+
+**Symptom:** The schema file doesn't match your code changes.
+
+**Possible causes:**
+- Schema file not regenerated after code changes
+- Schema file committed with outdated information
+- Production build using outdated schema
+
+**Solutions:**
+
+- Regenerate the schema by running your development build
+- Commit the updated schema file to version control
+- Ensure the schema file matches your current code before deploying
+- Review schema changes in pull requests to ensure they align with code changes
+
 ## FAQ
 
 ### Do I need a proxy server?
