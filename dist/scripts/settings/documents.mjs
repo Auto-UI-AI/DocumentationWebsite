@@ -23,6 +23,10 @@ export const Documents = [
         ],
     },
     {
+        title: "Complete Developer Guide",
+        href: "/developer-guide",
+    },
+    {
         title: "Quick Installation & Configuration",
         href: "/installation",
     },
