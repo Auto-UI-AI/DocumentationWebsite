@@ -1,0 +1,58 @@
+---
+title: Why AUTOUI (and what the plugin does)
+description: What AUTOUI solves, why the Type Schema plugin exists, and the key functions you’ll use during integration.
+keywords: ["why autoui", "plugin", "autouiTypeSchemaPlugin", "runtime schema", "validation", "functions", "components"]
+---
+
+AUTOUI solves one core problem: **turning natural language requests into safe, deterministic UI + function execution in your app**.
+
+Instead of building one-off “chat flows”, you describe your app once (via `AutoUIConfig`) and the assistant can:
+
+- Call your registered **functions**
+- Render your registered **React components**
+- Return a structured plan that the runtime can validate and execute
+
+## Why the plugin is necessary
+
+LLMs can hallucinate. Without guardrails, they may produce:
+
+- wrong function names
+- missing/extra params
+- wrong prop shapes for components
+
+The `@autoai-ui/autoui/plugin` exists to generate a **type-based runtime schema** (from your real TypeScript code) so AUTOUI can validate plans before executing them.
+
+<Note title="Result" type="success">
+With the schema + `runtime.validateLLMOutput: true`, AUTOUI can catch invalid params/props early instead of crashing your app.
+</Note>
+
+## The key functions (what they do)
+
+### `autouiTypeSchemaPlugin()` (Vite plugin)
+
+- **What it does**: scans your project during dev/build and generates `.autoui-runtime-schema.json`
+- **Why it matters**: the schema powers runtime validation and helps the assistant understand your function/component types
+
+### `autouiRegisterFunctionParamsSchema(fn)`
+
+- **What it does**: “marks” a function so the plugin can discover it and extract its parameter types
+- **When to use**: for every function you want AUTOUI to be able to validate (and that you later expose in `config.functions`)
+
+### `autouiRegisterComponentPropsSchema(Component)`
+
+- **What it does**: “marks” a React component so the plugin can discover it and extract its props types
+- **When to use**: for every component you want AUTOUI to be able to validate (and that you later expose in `config.components`)
+
+## The other half: `AutoUIConfig`
+
+Even if you register a function/component for schema extraction, AUTOUI can only call/render what you explicitly expose in your config:
+
+- `config.functions`: what the assistant is allowed to call
+- `config.components`: what the assistant is allowed to render
+
+## Related pages
+
+- [Quick Start](/docs/quickstart)
+- [Runtime & Debugging](/docs/runtime)
+- [Config: functions & components](/docs/config/functions-and-components)
+

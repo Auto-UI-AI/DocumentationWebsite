@@ -46,6 +46,8 @@ const config: AutoUIConfig = {
 
 This sample uses placeholders like **`/* your actual functions here */`** and expects you to fill in your **real** values (appId/sharedSecret).
 
+Portal: **[AutoUI Service Portal](https://autoui-chi.vercel.app/)** (where you create an app and get `appId` + `sharedSecret`).
+
 ```ts
 import type { AutoUIConfig } from "@autoai-ui/autoui"
 
@@ -55,7 +57,7 @@ import { doSomething } from "../lib/doSomething"
 
 export const config: AutoUIConfig = {
   /**
-   * Your actual appId from https://autoui-chi.vercel.app/
+   * Your actual appId from the AutoUI Service Portal
    *
    * Tip: keep it stable — changing it may break schema association and stored chat history.
    */
@@ -74,7 +76,7 @@ export const config: AutoUIConfig = {
     proxyUrl: import.meta.env.VITE_AUTOUI_PROXY_URL,
 
     /**
-     * Your actual sharedSecret from https://autoui-chi.vercel.app/
+     * Your actual sharedSecret from the AutoUI Service Portal
      * (this is NOT your OpenRouter API key)
      */
     sharedSecret: import.meta.env.VITE_AUTOUI_SHARED_SECRET,
