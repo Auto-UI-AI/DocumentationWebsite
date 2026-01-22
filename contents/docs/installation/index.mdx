@@ -9,7 +9,7 @@ This guide provides a quick overview of installing and configuring AUTOUI. For a
 ## Step 1: Install
 
 ```bash
-npm install @autoai-ui/autoui
+npm i @autoai-ui/autoui
 ```
 
 **Peer Dependencies:**
@@ -24,7 +24,7 @@ You have two options for the backend proxy:
 
 Visit the [AutoUI Service Portal](https://autoui-chi.vercel.app/) to generate:
 - **`appId`**: A unique identifier for your application
-- **`shared_secret`**: A secret key for authenticating requests to the LLM proxy
+- **`sharedSecret`**: A secret key for authenticating requests to the LLM proxy
 
 This service handles the proxy for you—no backend installation or setup required. Simply use the generated credentials in your config.
 
@@ -42,28 +42,30 @@ For this guide, we'll assume you're using Option A (the deployed service).
 Add the following to your `.env`, `.env.local`, or `.env.development` file:
 
 **If using AutoUI's deployed service:**
-- Get your `appId` and `shared_secret` from [autoui-chi.vercel.app](https://autoui-chi.vercel.app/)
-- Use the service URL as your `proxyUrl`
+- Get your `appId` and `sharedSecret` from [autoui-chi.vercel.app](https://autoui-chi.vercel.app/)
+- Use `https://autoui-proxy.onrender.com` as your `proxyUrl` (default hosted proxy)
 
 **For Vite/React projects:**
 ```bash
+# IMPORTANT: must match VITE_AUTOUI_APP_ID (plugin reads AUTOUI_APP_ID)
 AUTOUI_APP_ID=app_1768313360453_dbptv83
-VITE_BASE_URL=https://autoui-chi.vercel.app
+VITE_AUTOUI_APP_ID=app_1768313360453_dbptv83
+VITE_AUTOUI_PROXY_URL=https://autoui-proxy.onrender.com
 VITE_AUTOUI_SHARED_SECRET=your-shared-secret-from-service
 ```
 
 **For Next.js:**
 ```bash
-AUTOUI_APP_ID=app_1768313360453_dbptv83
-NEXT_PUBLIC_PROXY_URL=https://autoui-chi.vercel.app
-NEXT_PUBLIC_SHARED_SECRET=your-shared-secret-from-service
+NEXT_PUBLIC_AUTOUI_APP_ID=app_1768313360453_dbptv83
+NEXT_PUBLIC_AUTOUI_PROXY_URL=https://autoui-proxy.onrender.com
+NEXT_PUBLIC_AUTOUI_SHARED_SECRET=your-shared-secret-from-service
 ```
 
 **For Create React App:**
 ```bash
-AUTOUI_APP_ID=app_1768313360453_dbptv83
-REACT_APP_PROXY_URL=https://autoui-chi.vercel.app
-REACT_APP_SHARED_SECRET=your-shared-secret-from-service
+REACT_APP_AUTOUI_APP_ID=app_1768313360453_dbptv83
+REACT_APP_AUTOUI_PROXY_URL=https://autoui-proxy.onrender.com
+REACT_APP_AUTOUI_SHARED_SECRET=your-shared-secret-from-service
 ```
 
 <Note title="Self-Hosted Backend" type="info">
@@ -104,9 +106,9 @@ Create a configuration file (e.g., `lib/autoui-config.ts` or `lib/autoui-config.
 import type { AutoUIConfig } from '@autoai-ui/autoui';
 
 export const autouiConfig: AutoUIConfig = {
-  appId: import.meta.env.AUTOUI_APP_ID || 'your-app-id',
+  appId: import.meta.env.VITE_AUTOUI_APP_ID || 'your-app-id',
   llm: {
-    proxyUrl: import.meta.env.VITE_BASE_URL || 'http://localhost:3001',
+    proxyUrl: import.meta.env.VITE_AUTOUI_PROXY_URL || 'https://autoui-proxy.onrender.com',
     sharedSecret: import.meta.env.VITE_AUTOUI_SHARED_SECRET,
     appDescriptionPrompt: 'A brief description of what your app does',
   },
@@ -133,10 +135,10 @@ export const autouiConfig: AutoUIConfig = {
 import type { AutoUIConfig } from '@autoai-ui/autoui';
 
 export const autouiConfig: AutoUIConfig = {
-  appId: process.env.AUTOUI_APP_ID || 'your-app-id',
+  appId: process.env.NEXT_PUBLIC_AUTOUI_APP_ID || 'your-app-id',
   llm: {
-    proxyUrl: process.env.NEXT_PUBLIC_PROXY_URL || 'http://localhost:3001',
-    sharedSecret: process.env.NEXT_PUBLIC_SHARED_SECRET,
+    proxyUrl: process.env.NEXT_PUBLIC_AUTOUI_PROXY_URL || 'https://autoui-proxy.onrender.com',
+    sharedSecret: process.env.NEXT_PUBLIC_AUTOUI_SHARED_SECRET,
     appDescriptionPrompt: 'A brief description of what your app does',
   },
   runtime: {

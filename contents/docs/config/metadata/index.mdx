@@ -1,0 +1,40 @@
+---
+title: "Config: metadata"
+description: Metadata helps the assistant understand your app, constraints, and tone.
+keywords: ["config", "metadata", "appName", "description", "tags"]
+---
+
+`metadata` is optional, but strongly recommended. It gives the LLM extra context about your product and improves decision-making.
+
+## Partial example
+
+```ts
+metadata: {
+  appName: "My App",
+  appVersion: "0.1.0",
+  author: "Your Team",
+  createdAt: new Date().toISOString(),
+  description:
+    "Explain what the app does and what the assistant should help with. Add constraints and tone rules.",
+  tags: ["demo", "react"],
+}
+```
+
+## `metadata.appName` (required inside metadata)
+
+- Human-readable name used as context.
+
+## `metadata.description` (recommended)
+
+- This is where you can be explicit about behavior rules.
+- Great place to add:
+  - “Always respond politely”
+  - “If user intent is unclear, suggest UI actions”
+  - “Don’t expose secrets”
+
+## `metadata.tags` (optional)
+
+- Useful for organization and search.
+- Keep to short strings.
+
+

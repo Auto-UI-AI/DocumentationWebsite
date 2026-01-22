@@ -66,8 +66,9 @@ The AutoUI Service Portal handles the backend proxy for you - no need to set up 
 Create a `.env` file in your project root (or `.env.local` for local development):
 
 ```bash
+AUTOUI_APP_ID=your-app-id-here
 VITE_AUTOUI_APP_ID=your-app-id-here
-VITE_BASE_URL=https://autoui-proxy.onrender.com
+VITE_AUTOUI_PROXY_URL=https://autoui-proxy.onrender.com
 VITE_AUTOUI_SHARED_SECRET=your-shared-secret-here
 ```
 
@@ -114,7 +115,7 @@ export const autouiConfig: AutoUIConfig = {
 
   // LLM Configuration
   llm: {
-    proxyUrl: import.meta.env.VITE_BASE_URL || 'https://autoui-chi.vercel.app',
+    proxyUrl: import.meta.env.VITE_AUTOUI_PROXY_URL || 'https://autoui-proxy.onrender.com',
     sharedSecret: import.meta.env.VITE_AUTOUI_SHARED_SECRET,
     appDescriptionPrompt: 'A brief description of what your app does',
     temperature: 0.7,
@@ -588,4 +589,5 @@ If you encounter any issues:
 - [Documentation](/docs) - Browse all documentation
 - [GitHub Issues](https://github.com/autoai-ui/autoui/issues) - Report bugs or ask questions
 - [Service Portal](https://autoui-chi.vercel.app/) - Manage your app registration
+
 

@@ -439,11 +439,14 @@ To register components and functions for schema extraction, use the registration
 ```typescript
 import { autouiRegisterComponentPropsSchema, autouiRegisterFunctionParamsSchema } from '@autoai-ui/autoui';
 
-// Register a component's props type
-autouiRegisterComponentPropsSchema('ProductCard', ProductCardProps);
+import ProductCard from './components/ProductCard'
+import { fetchProducts } from './lib/fetchProducts'
 
-// Register a function's parameter and return types
-autouiRegisterFunctionParamsSchema('fetchProducts', FetchProductsParams, Product[]);
+// Register a component by passing the component reference
+autouiRegisterComponentPropsSchema(ProductCard);
+
+// Register a function by passing the function reference
+autouiRegisterFunctionParamsSchema(fetchProducts);
 ```
 
 These registrations help the plugin extract accurate type information during build time.

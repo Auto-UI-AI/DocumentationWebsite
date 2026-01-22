@@ -55,8 +55,8 @@ export interface LLMConfig {
 
 **Fields:**
 
-- `proxyUrl` (required): Backend proxy URL. Use `https://autoui-chi.vercel.app` for the deployed service, or your own proxy server URL
-- `sharedSecret` (optional): Shared secret for proxy authentication. Get this from the [AutoUI Service Portal](https://autoui-chi.vercel.app/) or generate it from your own proxy server
+- `proxyUrl` (required): Backend proxy URL. Default hosted proxy: `https://autoui-proxy.onrender.com` (or use your own proxy server URL if self-hosting)
+- `sharedSecret` (optional): Shared secret for proxy authentication. Get this from the [AutoUI Service Portal](https://autoui-chi.vercel.app/) (or generate it from your own proxy server if self-hosting)
 - `temperature` (optional): Sampling temperature hint (0.0-2.0). The actual temperature is controlled by the proxy server
 - `maxTokens` (optional): Maximum tokens hint. The actual limit is controlled by the proxy server
 - `appDescriptionPrompt` (optional): Brief description of your app that helps the LLM understand your application's purpose
@@ -317,7 +317,7 @@ import type { AutoUIConfig, AutoUIFunction, AutoUIComponent } from '@autoai-ui/a
 const config: AutoUIConfig = {
   appId: 'my-app',
   llm: {
-    proxyUrl: 'https://autoui-chi.vercel.app',
+    proxyUrl: 'https://autoui-proxy.onrender.com',
     sharedSecret: 'your-shared-secret',
     appDescriptionPrompt: 'A task management application',
   },
@@ -367,6 +367,7 @@ const config: AutoUIConfig = {
 - [Configuration Guide](/docs/config) - How to configure AutoUI
 - [Functions Guide](/docs/functions) - Registering functions
 - [Components Guide](/docs/components) - Registering components
+
 
 
 

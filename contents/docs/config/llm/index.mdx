@@ -1,0 +1,74 @@
+---
+title: "Config: llm"
+description: How llm config works (proxyUrl, sharedSecret, prompts, tokens), and how to choose values safely.
+keywords: ["config", "llm", "proxyUrl", "sharedSecret", "openrouter", "autoui"]
+---
+
+The `llm` section tells AutoUI **how to reach the backend proxy** and gives the LLM high-level context about your app.
+
+## Partial example
+
+```ts
+llm: {
+  proxyUrl: import.meta.env.VITE_AUTOUI_PROXY_URL,
+  sharedSecret: import.meta.env.VITE_AUTOUI_SHARED_SECRET,
+
+  appDescriptionPrompt: "A task manager app with list, filters, and stats.",
+  temperature: 0.2,
+  maxTokens: 2048,
+}
+```
+
+## `llm.proxyUrl`
+
+- **Where it is**: `config.llm.proxyUrl`
+- **What it is**: The URL of your backend proxy server.
+- **Default (hosted)**: `https://autoui-proxy.onrender.com`.
+- **Fallback behavior**: if `proxyUrl` is `null`/`undefined`, AUTOUI will use the **default hosted proxy**.
+- **When to change it**: if you self-host the backend proxy, set it to your deployment URL.
+- **Why it matters**: all chat messages and config context flow through this endpoint.
+
+## `llm.sharedSecret`
+
+- **What it is**: The client credential used by the browser to authenticate to the proxy.
+- **Where you get it**: `https://autoui-chi.vercel.app/` after you create an app.
+- **What it is NOT**: your OpenRouter API key.
+- **Security**: treat it like a secret — don’t commit it.
+
+## `llm.appDescriptionPrompt`
+
+- **What it is**: A short “system context” describing your app.
+- **What to include**:
+  - what the app does
+  - what the assistant should do
+  - any constraints (sensitive data, permissions, tone)
+- **Tip**: keep it short but specific. You can also expand context via `metadata.description`.
+
+## `llm.temperature` and `llm.maxTokens`
+
+- **What they are**: Hints for creativity and output length.
+- **Important**: your proxy may override.
+- **Practical values**:
+  - `temperature: 0.1–0.3` for “tool-using assistant”
+  - `maxTokens: 1024–4096` depending on how verbose you want outputs
+
+## Optional: `llm.requestHeaders`
+
+If you need to forward additional headers to your proxy, you can set:
+
+```ts
+llm: {
+  requestHeaders: {
+    "X-My-App": "myapp",
+  },
+}
+```
+
+Only use this if your proxy expects it.
+
+## Next pages
+
+- [Runtime config](/docs/config/runtime)
+- [Functions & Components](/docs/config/functions-and-components)
+
+

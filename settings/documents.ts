@@ -3,14 +3,6 @@ import { Paths } from "@/lib/pageroutes"
 export const Documents: Paths[] = [
   {
     heading: "Getting Started",
-    title: "What is AUTOUI?",
-    href: "/introduction",
-  },
-  {
-    title: "Getting Started with AutoUI",
-    href: "/getting-started",
-  },
-  {
     title: "Quick Start",
     href: "/quickstart",
     items: [
@@ -29,6 +21,14 @@ export const Documents: Paths[] = [
     ],
   },
   {
+    title: "What is AUTOUI?",
+    href: "/introduction",
+  },
+  {
+    title: "Getting Started with AutoUI",
+    href: "/getting-started",
+  },
+  {
     title: "Complete Developer Guide",
     href: "/developer-guide",
   },
@@ -43,6 +43,13 @@ export const Documents: Paths[] = [
   {
     title: "Config Explanation",
     href: "/config",
+    items: [
+      { title: "appId", href: "/app-id" },
+      { title: "llm", href: "/llm" },
+      { title: "runtime", href: "/runtime" },
+      { title: "functions & components", href: "/functions-and-components" },
+      { title: "metadata", href: "/metadata" },
+    ],
   },
 ]
 

@@ -1,0 +1,68 @@
+---
+title: "Config: runtime"
+description: Runtime config controls validation, persistence, debug logs, step limits, and error handling.
+keywords: ["config", "runtime", "validateLLMOutput", "maxSteps", "localStorage", "schema"]
+---
+
+The `runtime` section controls what happens in the browser after the LLM returns a plan.
+
+## Partial example
+
+```ts
+runtime: {
+  validateLLMOutput: true,
+  storeChatToLocalStorage: true,
+  localStorageKey: "autoui_chat",
+  enableDebugLogs: true,
+  maxSteps: 20,
+  errorHandling: {
+    showToUser: true,
+    retryOnFail: false,
+  },
+  runtimeSchemaPath: ".autoui-runtime-schema.json",
+}
+```
+
+## `runtime.validateLLMOutput`
+
+- **What it does**: validates LLM output before execution.
+- **Why you want it**: blocks malformed plans and mismatched params/props.
+- **Recommendation**: keep `true` in production.
+
+## `runtime.storeChatToLocalStorage` + `runtime.localStorageKey`
+
+- **What it does**: persists chat history across reloads.
+- **When to disable**: strict privacy, shared devices, or you want “stateless chat”.
+- **Tip**: set a unique key per app/environment so histories don’t mix.
+
+## `runtime.enableDebugLogs`
+
+- **What it does**: prints helpful debug logs for integration.
+- **Recommendation**: enable during dev, disable later if noisy.
+
+## `runtime.maxSteps`
+
+- **What it does**: hard cap on the number of steps the assistant can execute per plan.
+- **Why it matters**: prevents runaway plans/infinite loops.
+- **Typical values**: 10–30.
+
+## `runtime.errorHandling`
+
+### `errorHandling.showToUser`
+- If true, runtime errors can show up as chat messages.
+
+### `errorHandling.retryOnFail`
+- If true, runtime retries failed operations.
+- Use carefully: retries can duplicate side effects unless your functions are idempotent.
+
+## `runtime.runtimeSchemaPath`
+
+- **What it is**: where AUTOUI loads the generated schema file from.
+- **Default**: `.autoui-runtime-schema.json`.
+- **When to change it**: custom file location, or hosting schema at a URL.
+
+## Next pages
+
+- [Functions & Components](/docs/config/functions-and-components)
+
+

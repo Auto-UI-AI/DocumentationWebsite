@@ -105,7 +105,7 @@ AUTOUI uses a **proxy server** pattern for security:
 
 You have **two options** for the backend proxy:
 
-1. **Use AutoUI's Deployed Service** (Recommended for quick start): Visit [autoui-chi.vercel.app](https://autoui-chi.vercel.app/) to generate an `appId` and `shared_secret`. This service handles the proxy for you—no backend installation required.
+1. **Use AutoUI's hosted portal + proxy** (Recommended for quick start): Visit [autoui-chi.vercel.app](https://autoui-chi.vercel.app/) to register an app (you’ll paste your OpenRouter API key there). You’ll receive an `appId` and `sharedSecret`. By default, your frontend should use `https://autoui-proxy.onrender.com` as `llm.proxyUrl`.
 
 2. **Self-Hosted Backend**: Copy the AutoUI backend repository and run your own proxy server. Connect to it via the `proxyUrl` in your config. See [Backend Proxy Installation](/docs/backend-proxy) for setup instructions.
 
@@ -130,6 +130,29 @@ You have **two options** for the backend proxy:
 </Note>
 
 ## Architecture Diagram
+
+## Step-by-step execution flow
+
+<Mermaid
+  chart={`sequenceDiagram
+    participant User as User_Browser
+    participant ModalChat as ModalChat_Frontend
+    participant Proxy as Proxy_Backend
+    participant OpenRouter as OpenRouter_LLM
+    participant Runtime as AutoUI_Runtime
+    participant App as YourApp_Functions_UI
+
+    User->>ModalChat: Send message
+    ModalChat->>Proxy: Send message + appId + schema metadata
+    Proxy->>OpenRouter: Forward request (server-side OpenRouter key)
+    OpenRouter-->>Proxy: Return plan JSON
+    Proxy-->>Runtime: Return plan JSON
+    Runtime->>Runtime: Validate plan (optional, schema-based)
+    Runtime->>App: Call functions / render components
+    App-->>Runtime: Return results (data + UI state)
+    Runtime-->>ModalChat: Render assistant response + UI actions
+  `} 
+/>
 
 ```
 ┌─────────────┐

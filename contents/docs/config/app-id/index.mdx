@@ -1,0 +1,60 @@
+---
+title: "Config: appId"
+description: What appId is, where to get it, and how it connects your frontend, schema generation, and proxy.
+keywords: ["config", "appId", "autoui", "portal", "schema", "vite plugin"]
+---
+
+`appId` is the **identity** of your AutoUI integration. It’s how your frontend, the generated schema, and the proxy “agree” which app is being used.
+
+## Where you get `appId`
+
+1. Go to `https://autoui-chi.vercel.app/`
+2. Login / Sign up
+3. Create a new app (you’ll paste your OpenRouter API key there)
+4. Copy the returned **`appId`**
+
+## How to set it (recommended)
+
+In Vite apps, keep **both** variables set to the same value:
+
+```bash
+# IMPORTANT: must match VITE_AUTOUI_APP_ID (plugin reads AUTOUI_APP_ID)
+AUTOUI_APP_ID=app_your_actual_app_id_here
+VITE_AUTOUI_APP_ID=app_your_actual_app_id_here
+```
+
+Then in your config:
+
+```ts
+import type { AutoUIConfig } from "@autoai-ui/autoui"
+
+export const config: AutoUIConfig = {
+  appId: import.meta.env.VITE_AUTOUI_APP_ID,
+  llm: { /* ... */ },
+  runtime: { /* ... */ },
+  functions: {},
+  components: {},
+}
+```
+
+## Why `AUTOUI_APP_ID` and `VITE_AUTOUI_APP_ID` both exist
+
+- **`AUTOUI_APP_ID`**: read by the **Vite plugin** during schema generation.
+- **`VITE_AUTOUI_APP_ID`**: used by your **frontend runtime** (Vite exposes `VITE_*` vars to the browser).
+
+They should be identical.
+
+## Common mistakes
+
+- **Hardcoding** an `appId` in source code (easy to forget when you create a new portal app)
+- Setting `AUTOUI_APP_ID` but forgetting `VITE_AUTOUI_APP_ID` (or vice versa)
+- Accidentally using a different `appId` for different environments without realizing chat history and schema association changes
+
+## Next pages
+
+- [LLM config](/docs/config/llm)
+- [Runtime config](/docs/config/runtime)
+- [Functions & Components](/docs/config/functions-and-components)
+- [Metadata](/docs/config/metadata)
+
+

@@ -6,6 +6,27 @@ keywords: ["config", "configuration", "autouiconfig", "setup"]
 
 Your `AutoUIConfig` is the contract between your app and the AI assistant. It tells the AI what your app can do.
 
+## What is `AutoUIConfig`?
+
+`AutoUIConfig` is the single object you pass into `<ModalChat config={...} />`. It defines:
+
+- **Identity**: `appId`
+- **How to talk to the LLM proxy**: `llm`
+- **Runtime behavior**: `runtime`
+- **What the assistant can do**: `functions` + `components`
+- **Extra context**: `metadata`
+
+<Note title="This section is now split into pages" type="info">
+Use the links below to get a focused, text-first explanation for each part of the config:
+
+- [App ID (required)](/docs/config/app-id)
+- [LLM config](/docs/config/llm)
+- [Runtime config](/docs/config/runtime)
+- [Functions (how to define + best prompts)](/docs/config/functions-and-components#functions)
+- [Components (how to define + defaults)](/docs/config/functions-and-components#components)
+- [Metadata](/docs/config/metadata)
+</Note>
+
 ## Basic Structure
 
 ```tsx
@@ -15,11 +36,135 @@ const config: AutoUIConfig = {
   appId: 'my-app',           // Required: Unique app ID
   llm: { /* ... */ },        // Required: LLM configuration
   runtime: { /* ... */ },    // Required: Runtime settings
-  functions: { /* ... */ },  // Optional: Functions AI can call
-  components: { /* ... */ }, // Optional: Components AI can render
+  functions: { /* ... */ },  // Required: Functions AI can call (can be empty)
+  components: { /* ... */ }, // Required: Components AI can render (can be empty)
   metadata: { /* ... */ },   // Optional: App metadata
 }
 ```
+
+## Annotated sample config (copy/paste template)
+
+This sample uses placeholders like **`/* your actual functions here */`** and expects you to fill in your **real** values (appId/sharedSecret).
+
+```ts
+import type { AutoUIConfig } from "@autoai-ui/autoui"
+
+// ✅ Import your actual functions/components
+import MyWidget from "../components/MyWidget"
+import { doSomething } from "../lib/doSomething"
+
+export const config: AutoUIConfig = {
+  /**
+   * Your actual appId from https://autoui-chi.vercel.app/
+   *
+   * Tip: keep it stable — changing it may break schema association and stored chat history.
+   */
+  appId: import.meta.env.VITE_AUTOUI_APP_ID,
+
+  llm: {
+    /**
+     * Where proxyUrl is: config.llm.proxyUrl
+     *
+     * Default hosted proxy:
+     * - https://autoui-proxy.onrender.com
+     *
+     * If proxyUrl is null/undefined, AUTOUI falls back to the default hosted proxy.
+     * If you self-host the backend proxy, put your own URL here instead.
+     */
+    proxyUrl: import.meta.env.VITE_AUTOUI_PROXY_URL,
+
+    /**
+     * Your actual sharedSecret from https://autoui-chi.vercel.app/
+     * (this is NOT your OpenRouter API key)
+     */
+    sharedSecret: import.meta.env.VITE_AUTOUI_SHARED_SECRET,
+
+    /**
+     * High-level context for the assistant. Keep it short but specific.
+     */
+    appDescriptionPrompt: "A task manager app with list, filters, and stats.",
+
+    /**
+     * Hints only — the proxy may override.
+     */
+    temperature: 0.2,
+    maxTokens: 2048,
+  },
+
+  runtime: {
+    /**
+     * Validate the plan and params/props before execution.
+     * Recommended: true (especially in production).
+     */
+    validateLLMOutput: true,
+
+    /**
+     * Persist chat history in the browser.
+     */
+    storeChatToLocalStorage: true,
+    localStorageKey: "autoui_chat",
+
+    /**
+     * Useful while integrating; disable in production if you want quieter logs.
+     */
+    enableDebugLogs: true,
+
+    /**
+     * Hard stop to prevent runaway plans.
+     */
+    maxSteps: 20,
+
+    errorHandling: {
+      showToUser: true,
+      retryOnFail: false,
+    },
+
+    /**
+     * Where the generated schema lives. Default is '.autoui-runtime-schema.json'.
+     */
+    runtimeSchemaPath: ".autoui-runtime-schema.json",
+  },
+
+  functions: {
+    /* your actual functions here */
+    doSomething: {
+      prompt: "Explain what this function does and when the assistant should call it.",
+      callFunc: doSomething,
+      // canShareDataWithLLM: true,
+    },
+  },
+
+  components: {
+    /* your actual components here */
+    MyWidget: {
+      prompt: "Explain what UI this component renders and when it’s useful.",
+      callComponent: MyWidget,
+      defaults: {
+        /* your default props here (recommended) */
+      },
+      exampleUsage: "<MyWidget />",
+      category: "layout",
+    },
+  },
+
+  metadata: {
+    appName: "My App",
+    description:
+      "Optional but recommended. Describe what the app does and what the assistant is allowed to help with.",
+    tags: ["demo"],
+  },
+}
+```
+
+## Next: detailed prop explanations
+
+For the detailed “every prop explained in text” breakdown, go to:
+
+- [App ID](/docs/config/app-id)
+- [LLM config](/docs/config/llm)
+- [Runtime config](/docs/config/runtime)
+- [Functions & Components](/docs/config/functions-and-components)
+- [Metadata](/docs/config/metadata)
 
 ## Required Fields
 
@@ -109,6 +254,10 @@ components: {
 }
 ```
 
+## Functions and components
+
+Moved to: [Functions & Components](/docs/config/functions-and-components)
+
 ## React vs Next.js
 
 ### React Config
@@ -121,13 +270,15 @@ export function createAutoUIConfig(): AutoUIConfig {
   return {
     appId: 'my-react-app',
     llm: {
-      proxyUrl: process.env.REACT_APP_PROXY_URL!,
-      sharedSecret: process.env.REACT_APP_SHARED_SECRET,
+      proxyUrl: process.env.REACT_APP_AUTOUI_PROXY_URL!,
+      sharedSecret: process.env.REACT_APP_AUTOUI_SHARED_SECRET,
     },
     runtime: {
       validateLLMOutput: true,
       storeChatToLocalStorage: true,
     },
+    functions: {},
+    components: {},
   }
 }
 ```
@@ -144,13 +295,15 @@ export function createAutoUIConfig(): AutoUIConfig {
   return {
     appId: 'my-nextjs-app',
     llm: {
-      proxyUrl: process.env.NEXT_PUBLIC_PROXY_URL!,
-      sharedSecret: process.env.NEXT_PUBLIC_SHARED_SECRET,
+      proxyUrl: process.env.NEXT_PUBLIC_AUTOUI_PROXY_URL!,
+      sharedSecret: process.env.NEXT_PUBLIC_AUTOUI_SHARED_SECRET,
     },
     runtime: {
       validateLLMOutput: true,
       storeChatToLocalStorage: true,
     },
+    functions: {},
+    components: {},
   }
 }
 ```

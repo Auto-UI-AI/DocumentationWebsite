@@ -5,6 +5,10 @@ export const Documents = [
         href: "/introduction",
     },
     {
+        title: "Getting Started with AutoUI",
+        href: "/getting-started",
+    },
+    {
         title: "Quick Start",
         href: "/quickstart",
         items: [

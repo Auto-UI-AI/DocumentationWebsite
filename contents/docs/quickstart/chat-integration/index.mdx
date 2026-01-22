@@ -15,15 +15,30 @@ It covers:
 > This documentation site **does not mount** the chat globally anymore.  
 > Use the examples below to wire it into **your own app**.
 
-## 1. Install the library
+## 1) Install the library
 
 ```bash
-npm install @autoai-ui/autoui
+npm i @autoai-ui/autoui
 ```
 
 You can also use `pnpm` or `yarn` if that’s what your project uses.
 
-## 2. Create your `AutoUIConfig`
+## 2) Register your app (hosted portal)
+
+To use the hosted proxy, register your application at `https://autoui-chi.vercel.app/`:
+
+- Login / Sign up
+- Create a new app
+- Paste your **OpenRouter API key** when prompted
+- Copy:
+  - `appId`
+  - `sharedSecret`
+
+<Note title="What is `sharedSecret`?" type="info">
+It’s the client credential used by your browser app to authenticate to the proxy. Your OpenRouter API key never goes to the frontend.
+</Note>
+
+## 3) Create your `AutoUIConfig`
 
 At the core of AUTOUI is the `AutoUIConfig` object.  
 It tells the assistant how to talk to your backend, which functions it can call, and which components it can render.
@@ -36,11 +51,11 @@ import type { AutoUIConfig } from "@autoai-ui/autoui"
 
 export function createAutoUIConfig(): AutoUIConfig {
   return {
-    appId: "my-app",
+    appId: "my-app", // or from env
     llm: {
-      // Proxy that talks to your LLM provider
-      proxyUrl: process.env.NEXT_PUBLIC_PROXY_URL || "http://localhost:3001",
-      sharedSecret: process.env.NEXT_PUBLIC_AUTOUI_SHARED_SECRET,
+      // Proxy that talks to OpenRouter / your LLM provider
+      proxyUrl: "https://autoui-proxy.onrender.com",
+      sharedSecret: "YOUR_SHARED_SECRET",
       temperature: 0.3,
     },
     runtime: {
@@ -49,9 +64,8 @@ export function createAutoUIConfig(): AutoUIConfig {
       localStorageKey: "autoui_chat",
       maxSteps: 20,
     },
-    // Optional: register functions and components here
-    // functions: { ... }
-    // components: { ... }
+    functions: {},
+    components: {},
   }
 }
 ```
@@ -63,34 +77,47 @@ export function createAutoUIConfig(): AutoUIConfig {
 
 For a deeper breakdown of every field, see the [AutoUIConfig reference](/docs/reference/autouiconfig).
 
-## 3. Environment variables
+## 4) Environment variables
 
-You need at least:
+AUTOUI needs:
 
-- A proxy URL that forwards requests to your LLM provider
-- A shared secret used to authenticate from the browser to your proxy
+- `appId` (from the portal)
+- `proxyUrl` (default hosted proxy is `https://autoui-proxy.onrender.com`)
+- `sharedSecret` (from the portal)
 
-### React (.env)
+### Vite (recommended)
 
 ```bash
-REACT_APP_PROXY_URL=http://localhost:3001
-REACT_APP_AUTOUI_SHARED_SECRET=your-secret
+# IMPORTANT: must match VITE_AUTOUI_APP_ID (plugin reads AUTOUI_APP_ID)
+AUTOUI_APP_ID=app_xxx
+VITE_AUTOUI_APP_ID=app_xxx
+VITE_AUTOUI_SHARED_SECRET=xxx
+VITE_AUTOUI_PROXY_URL=https://autoui-proxy.onrender.com
 ```
 
-Update your config to read from `REACT_APP_*` for CRA or `VITE_*` for Vite (see the [React quick start](/docs/quickstart/react) for exact examples).
+If you self-host the backend proxy, set `VITE_AUTOUI_PROXY_URL` to your deployment URL.
+
+### Create React App (.env)
+
+```bash
+REACT_APP_AUTOUI_APP_ID=app_xxx
+REACT_APP_AUTOUI_SHARED_SECRET=xxx
+REACT_APP_AUTOUI_PROXY_URL=https://autoui-proxy.onrender.com
+```
 
 ### Next.js (.env.local)
 
 ```bash
-NEXT_PUBLIC_PROXY_URL=http://localhost:3001
-NEXT_PUBLIC_AUTOUI_SHARED_SECRET=your-secret
+NEXT_PUBLIC_AUTOUI_APP_ID=app_xxx
+NEXT_PUBLIC_AUTOUI_SHARED_SECRET=xxx
+NEXT_PUBLIC_AUTOUI_PROXY_URL=https://autoui-proxy.onrender.com
 ```
 
 These `NEXT_PUBLIC_*` variables are available in the browser, which is required for the chat to talk to your proxy.
 
 For how to run the proxy itself, see [Backend Proxy Installation & Configuration](/docs/backend-proxy).
 
-## 4. Integrate in a React app
+## 5) Integrate in a React app
 
 This is the simplest integration.
 
@@ -119,7 +146,7 @@ Click it to open the chat and start talking to your assistant.
 
 For a step-by-step React-only flow, see the [React Quick Start](/docs/quickstart/react).
 
-## 5. Integrate in a Next.js app
+## 6) Integrate in a Next.js app
 
 Next.js has **SSR** (server‑side rendering), so `ModalChat` **must** be dynamically imported with `ssr: false`.
 
@@ -208,7 +235,91 @@ export default function App({ Component, pageProps }: AppProps) {
 
 For more detailed Next.js patterns (server actions, middleware, etc.), see [Next.js Best Practices](/docs/best-practices/nextjs).
 
-## 6. Common gotchas
+## 7) Enable runtime validation (Vite plugin + registration)
+
+AUTOUI can validate LLM-generated params/props **at runtime** using a schema file generated from your TypeScript types.
+
+### 7.1 Add the Vite plugin
+
+```ts
+import { defineConfig } from "vite"
+import react from "@vitejs/plugin-react"
+import { autouiTypeSchemaPlugin } from "@autoai-ui/autoui/plugin"
+
+export default defineConfig({
+  plugins: [react(), autouiTypeSchemaPlugin()],
+})
+```
+
+### 7.2 Register functions and components
+
+Register your callables so the plugin can discover them and extract their types:
+
+```ts
+import {
+  autouiRegisterComponentPropsSchema,
+  autouiRegisterFunctionParamsSchema,
+} from "@autoai-ui/autoui"
+
+import TaskStats from "./components/TaskStats"
+import { createTask } from "./hooks/useTaskFunctions"
+
+autouiRegisterComponentPropsSchema(TaskStats)
+autouiRegisterFunctionParamsSchema(createTask)
+```
+
+<Note title="Result" type="success">
+You’ll get a generated <code>.autoui-runtime-schema.json</code> file. When <code>runtime.validateLLMOutput</code> is enabled, AUTOUI can validate the plan before executing it.
+</Note>
+
+### 7.3 Add registered items into the config (required)
+
+Registration enables schema extraction, but AUTOUI can only **call/render** what you put into your config:
+
+```ts
+import type { AutoUIConfig } from "@autoai-ui/autoui"
+
+import MyWidget from "./components/MyWidget"
+import { doSomething } from "./lib/doSomething"
+
+export const autouiConfig: AutoUIConfig = {
+  appId: import.meta.env.VITE_AUTOUI_APP_ID,
+  llm: {
+    proxyUrl: import.meta.env.VITE_AUTOUI_PROXY_URL,
+    sharedSecret: import.meta.env.VITE_AUTOUI_SHARED_SECRET,
+  },
+  runtime: {
+    validateLLMOutput: true,
+  },
+
+  functions: {
+    /* your actual functions here */
+    doSomething: {
+      prompt: "Explain what this function does and when the assistant should call it.",
+      callFunc: doSomething,
+    },
+  },
+
+  components: {
+    /* your actual components here */
+    MyWidget: {
+      prompt: "Explain what UI this component renders and when it’s useful.",
+      callComponent: MyWidget,
+      defaults: {
+        /* your default props here (recommended) */
+      },
+      exampleUsage: "<MyWidget />",
+      category: "layout",
+    },
+  },
+}
+```
+
+<Note title="Key rule" type="info">
+The keys you use in <code>functions</code>/<code>components</code> (like <code>createTask</code> and <code>TaskStats</code>) are what the LLM will reference in its plan.
+</Note>
+
+## 8) Common gotchas
 
 - **Hydration errors in Next.js**  
   Make sure `ModalChat` is **only** used inside a client component and imported via `dynamic(..., { ssr: false })`.
@@ -226,7 +337,7 @@ const config = useMemo(
 )
 ```
 
-## 7. Where to go next
+## 9) Where to go next
 
 - Full **Next.js quick start**: [Next.js Quick Start](/docs/quickstart/nextjs)
 - Full **React quick start**: [React Quick Start](/docs/quickstart/react)

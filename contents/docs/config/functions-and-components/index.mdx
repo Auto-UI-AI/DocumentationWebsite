@@ -1,0 +1,97 @@
+---
+title: "Config: functions & components"
+description: How to properly define config.functions and config.components (what each prop does, best practices, and validation).
+keywords: ["config", "functions", "components", "callFunc", "callComponent", "prompt", "defaults"]
+---
+
+This page explains how to fill out **`config.functions`** and **`config.components`** in a way that’s clear for both you and the LLM.
+
+<Note title="Two-step mental model" type="info">
+- **Config** decides what the assistant is allowed to call/render.
+- **Registration + Vite plugin** enables schema generation and runtime validation of params/props.
+</Note>
+
+## Functions
+
+### Minimal function entry (partial example)
+
+```ts
+functions: {
+  /* your actual functions here */
+  doSomething: {
+    prompt: "Explain what this function does and when the assistant should call it.",
+    callFunc: doSomething, // ✅ your actual function here
+  },
+}
+```
+
+### What each function prop is responsible for
+
+#### `prompt` (required)
+- **Responsibility**: teaches the LLM when/why to call the function.
+- **Write it like**: “Use this when the user asks to …”.
+- **Include constraints**: side effects, permissions, what it returns.
+
+#### `callFunc` (required)
+- **Responsibility**: the real implementation that will run.
+- **Important**: return a value (not `void`), so the assistant can use results.
+
+#### `params` (optional, recommended)
+- **Responsibility**: human-readable param hints.
+- **Tip**: keep it concise; real validation comes from schema generation.
+
+#### `returns` (optional)
+- **Responsibility**: describes what the function returns (helps the model).
+
+#### `canShareDataWithLLM` (optional)
+- **Responsibility**: controls whether returned data can be included in LLM context.
+- **Use `false`** for sensitive data.
+
+## Components
+
+### Minimal component entry (partial example)
+
+```ts
+components: {
+  /* your actual components here */
+  MyWidget: {
+    prompt: "Explain what UI this component renders and when it’s useful.",
+    callComponent: MyWidget, // ✅ your actual component here
+  },
+}
+```
+
+### What each component prop is responsible for
+
+#### `prompt` (required)
+- **Responsibility**: teaches the LLM when this UI is useful.
+- **Good prompts** describe: what it shows, what it helps the user do, and what inputs it needs.
+
+#### `callComponent` (required)
+- **Responsibility**: the real React component that AUTOUI will render.
+
+#### `defaults` (optional, recommended)
+- **Responsibility**: helps the model understand expected prop shapes.
+- **Best practice**: provide realistic defaults (even for arrays/objects).
+
+#### `exampleUsage` (optional)
+- **Responsibility**: human-readable JSX usage shown in docs and helpful for the model.
+
+#### `category` / `tags` (optional)
+- **Responsibility**: organization and search.
+
+## Naming rule (important)
+
+The **keys** you use in `functions` / `components` (like `createTask` or `TaskStats`) are what the LLM references in its plan JSON. Keep them:
+
+- short
+- stable (renaming breaks existing behavior)
+- descriptive
+
+## Common mistakes
+
+- Putting a function/component in config but **forgetting to register it** (schema misses it)
+- Registering it but **forgetting to add it to config** (assistant can’t call/render it)
+- Vague prompts (“does something”) that don’t teach the model when to use it
+
+

@@ -1,32 +1,295 @@
 ---
 title: Quick Start
-description: Get started with AUTOUI in minutes. Choose your framework and follow the quick setup guide.
-keywords: ["quickstart", "getting started", "setup", "react", "nextjs"]
+description: Install AutoUI, register your app, add ModalChat, configure Vite type validation, and ship — with copy/paste templates.
+keywords:
+  [
+    "quickstart",
+    "getting started",
+    "vite",
+    "react",
+    "typescript",
+    "modalchat",
+    "autouiTypeSchemaPlugin",
+    "openrouter",
+  ]
 ---
 
-Welcome to AUTOUI! This guide will help you get up and running quickly.
+Welcome to AUTOUI! This page is the fastest path to a working integration in a **Vite + React + TypeScript** app.
 
-## Choose Your Framework
+## What you’ll build
 
-AUTOUI works with any React-based framework. Select your framework to see the specific setup instructions:
+- You’ll install the library from npm
+- You’ll register an app in our hosted portal to get your **`appId`** and **`sharedSecret`**
+- You’ll drop in `<ModalChat />`
+- You’ll add the Vite plugin so AUTOUI can **validate function params and component props at runtime**
 
-- **[React Quick Start](/docs/quickstart/react)** - For Create React App, Vite, or any React application
-- **[Next.js Quick Start](/docs/quickstart/nextjs)** - For Next.js applications (App Router or Pages Router)
+## Quickstart (6 steps)
 
-## What You'll Need
+<Step>
+<StepItem title="1) Install from npm">
 
-Before you begin, make sure you have:
+```bash
+npm i @autoai-ui/autoui
+```
 
-- Node.js 16+ installed
-- A React application (or create one)
-- A backend proxy server (see [Backend Proxy Installation](/docs/backend-proxy) for setup)
+<video
+  controls
+  className="w-full rounded-lg my-4"
+  src="/screens/quickstart-step-1-install.mp4"
+  poster="/screens/screen-1.png"
+>
+  Your browser does not support the video tag.
+</video>
 
-## Quick Overview
+<Note title="Already using pnpm/yarn?" type="info">
+Use the equivalent install command for your package manager — the library is the same.
+</Note>
+</StepItem>
 
-AUTOUI integration involves three main steps:
+<StepItem title="2) Register your app (hosted portal)">
+Go to `https://autoui-chi.vercel.app/` and:
 
-1. **Install the package** - Add `@autoai-ui/autoui` to your project
-2. **Create a config** - Define your app's capabilities in an `AutoUIConfig` object
-3. **Add ModalChat** - Import and render the `<ModalChat>` component
+- Login / Sign up
+- Create a **new app**
+- Paste your **OpenRouter API key** when prompted
+- Copy the generated credentials:
+  - **`appId`**
+  - **`sharedSecret`**
 
-Ready to get started? Choose your framework above!
+<video
+  controls
+  className="w-full rounded-lg my-4"
+  src="/screens/quickstart-step-2-portal.mp4"
+  poster="/screens/screen-2.png"
+>
+  Your browser does not support the video tag.
+</video>
+
+<Note title="Security model" type="success">
+Your OpenRouter API key stays on the server side. Your frontend uses `proxyUrl` + `sharedSecret` to talk to the proxy.
+</Note>
+</StepItem>
+
+<StepItem title="3) Render ModalChat in your app">
+In your React app (typically near the root), render `<ModalChat />`:
+
+```tsx
+import { ModalChat } from "@autoai-ui/autoui"
+import { autouiConfig } from "./autoui.config"
+
+export function App() {
+  return (
+    <main>
+      {/* your app */}
+      <ModalChat config={autouiConfig} />
+    </main>
+  )
+}
+```
+
+<video
+  controls
+  className="w-full rounded-lg my-4"
+  src="/screens/quickstart-step-3-modalchat.mp4"
+  poster="/screens/screen-3.png"
+>
+  Your browser does not support the video tag.
+</video>
+</StepItem>
+
+<StepItem title="4) Add the Vite plugin (type validation)">
+Add `autouiTypeSchemaPlugin()` to your `vite.config.ts`. This plugin generates the runtime schema used for validation.
+
+```ts
+import { defineConfig } from "vite"
+import react from "@vitejs/plugin-react"
+import { autouiTypeSchemaPlugin } from "@autoai-ui/autoui/plugin"
+
+export default defineConfig({
+  plugins: [react(), autouiTypeSchemaPlugin()],
+})
+```
+
+<video
+  controls
+  className="w-full rounded-lg my-4"
+  src="/screens/quickstart-step-4-vite-plugin.mp4"
+  poster="/screens/screen-4.png"
+>
+  Your browser does not support the video tag.
+</video>
+
+<Note title="Where is the schema file?" type="info">
+By default the runtime schema is written to <code>.autoui-runtime-schema.json</code> (commit it to your repo so production builds can validate too).
+</Note>
+</StepItem>
+
+<StepItem title="5) Copy/paste the config template (and register functions/components)">
+Create an env file (example: <code>.env.local</code>) and fill in your values:
+
+```bash
+# From the portal:
+#
+# IMPORTANT:
+# - `AUTOUI_APP_ID` is read by the Vite plugin
+# - `VITE_AUTOUI_APP_ID` is used by your frontend code
+# They MUST be the same value.
+AUTOUI_APP_ID=app_xxx
+VITE_AUTOUI_APP_ID=app_xxx
+VITE_AUTOUI_SHARED_SECRET=xxx
+
+# Default hosted proxy (recommended):
+VITE_AUTOUI_PROXY_URL=https://autoui-proxy.onrender.com
+
+# If you're hosting your own backend proxy, use your URL instead:
+# VITE_AUTOUI_PROXY_URL=https://your-proxy.example.com
+```
+
+Now create a config file (example: <code>src/autoui.config.ts</code>) and paste this template:
+
+```ts
+import type { AutoUIConfig } from "@autoai-ui/autoui"
+
+// ✅ Import your actual functions/components (replace with your real paths)
+import MyWidget from "./components/MyWidget"
+import { doSomething } from "./lib/doSomething"
+
+export const autouiConfig: AutoUIConfig = {
+  /* =========================
+   *   APP ID (IMPORTANT)
+   * =========================
+   * Your actual appId from https://autoui-chi.vercel.app/
+   */
+  appId: import.meta.env.VITE_AUTOUI_APP_ID,
+
+  llm: {
+    /**
+     * Default hosted proxy:
+     * - https://autoui-proxy.onrender.com
+     * If self-hosting the backend, put your own proxy URL in the env instead.
+     */
+    proxyUrl: import.meta.env.VITE_AUTOUI_PROXY_URL,
+
+    /**
+     * Your actual sharedSecret from https://autoui-chi.vercel.app/
+     * (This is NOT your OpenRouter API key.)
+     */
+    sharedSecret: import.meta.env.VITE_AUTOUI_SHARED_SECRET,
+
+    appDescriptionPrompt: "Describe your app in 1-2 sentences.",
+    temperature: 0.2,
+    maxTokens: 2048,
+  },
+
+  runtime: {
+    validateLLMOutput: true,
+    storeChatToLocalStorage: true,
+    localStorageKey: "autoui_chat",
+    enableDebugLogs: true,
+    maxSteps: 20,
+    errorHandling: {
+      showToUser: true,
+      retryOnFail: false,
+    },
+  },
+
+  /* =========================
+   *   FUNCTIONS
+   * =========================
+   * Put your actual app functions here (the assistant will be able to call them)
+   */
+  functions: {
+    /* your actual functions here */
+    doSomething: {
+      prompt: "Explain what this function does and when the assistant should call it.",
+      callFunc: doSomething, // ✅ your actual function here
+      // canShareDataWithLLM: true,
+    },
+  },
+
+  /* =========================
+   *   COMPONENTS
+   * =========================
+   * Put your actual React components here (the assistant will be able to render them)
+   */
+  components: {
+    /* your actual components here */
+    MyWidget: {
+      prompt: "Explain what UI this component renders and when it’s useful.",
+      callComponent: MyWidget, // ✅ your actual component here
+      defaults: {
+        /* your default props here (recommended) */
+      },
+      exampleUsage: "<MyWidget />",
+      category: "layout",
+      // tags: ["dashboard"],
+    },
+  },
+}
+```
+
+The final step is to **register** the same functions/components so the plugin can extract their types (and runtime validation can work):
+
+```tsx
+import {
+  autouiRegisterComponentPropsSchema,
+  autouiRegisterFunctionParamsSchema,
+} from "@autoai-ui/autoui"
+
+import MyWidget from "./components/MyWidget"
+import { doSomething } from "./lib/doSomething"
+
+autouiRegisterComponentPropsSchema(MyWidget)
+
+autouiRegisterFunctionParamsSchema(doSomething)
+```
+
+<Note title="Important" type="info">
+You typically do both:
+
+- Put functions/components into <code>config.functions</code> and <code>config.components</code> (so AUTOUI can call/render them)
+- Register them (so the Vite plugin can generate schema and runtime validation can work)
+</Note>
+
+Want a deeper explanation of what each prop does and how to structure this cleanly?  
+See: **[Config functions & components guide](/docs/config/functions-and-components)**
+
+<video
+  controls
+  className="w-full rounded-lg my-4"
+  src="/screens/quickstart-step-5-config-and-register.mp4"
+  poster="/screens/screen-5.png"
+>
+  Your browser does not support the video tag.
+</video>
+
+<Note title="Why registration matters" type="warning">
+If you forget to register a function/component, it won’t appear in the generated schema, and AUTOUI can’t reliably validate LLM output for it at runtime.
+</Note>
+</StepItem>
+
+<StepItem title="6) Run the project">
+Start your app:
+
+```bash
+npm run dev
+```
+
+<video
+  controls
+  className="w-full rounded-lg my-4"
+  src="/screens/quickstart-step-6-run.mp4"
+  poster="/screens/screen-6.png"
+>
+  Your browser does not support the video tag.
+</video>
+
+You should see a floating chat button. Open it and try asking for help with your app UI.
+</StepItem>
+</Step>
+
+## Next pages (recommended)
+- **[Integrate AUTOUI Chat](/docs/quickstart/chat-integration)**: deeper integration + best patterns
+- **[Config reference](/docs/reference/autouiconfig)**: every config prop explained
+- **[Styling](/docs/styling)**: customize how the chat looks and feels
+- **[How AUTOUI works](/docs/introduction)**: the full step-by-step runtime flow
