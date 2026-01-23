@@ -26,15 +26,21 @@ User → ModalChat → Proxy Server → OpenRouter/LLM → Plan JSON → Fronten
 A user opens the ModalChat widget and sends a message or request.
 </StepItem>
 
-<StepItem title="2. Config Transmission">
-ModalChat sends your `AutoUIConfig` to the proxy server, which includes:
-- App metadata and description
-- Available functions and components
-- Runtime settings
+<StepItem title="2. Request + Config Transmission">
+ModalChat sends a request to the proxy server that typically includes:
+- User message
+- `appId` + `sharedSecret` (client credential)
+- A properly formatted prompt built from your `AutoUIConfig` (metadata, functions, components, runtime settings)
+- Optional schema metadata (so the backend/LLM understands available types)
 </StepItem>
 
-<StepItem title="3. LLM Processing">
-The proxy server forwards the request to OpenRouter with your config. The LLM generates a structured **plan**—a JSON response that describes what actions to take.
+<StepItem title="3. Proxy Auth + LLM Processing">
+The proxy server:
+- Verifies that the `appId` exists and that the `sharedSecret` is valid
+- Decrypts the stored OpenRouter API key (stored encrypted in the database, so your key is not exposed to the frontend)
+- Forwards the request to OpenRouter/LLM
+
+The LLM returns a structured **instruction plan** (JSON) describing what actions to take.
 </StepItem>
 
 <StepItem title="4. Plan Execution">
@@ -43,10 +49,12 @@ The frontend runtime receives the plan and executes it step-by-step:
 - Renders registered React components
 - Updates UI state
 - Handles errors and retries
+
+Think of the runtime as a small **engine**: it runs the instruction plan and maintains a **context store** (key → value pairs) that can be used across steps.
 </StepItem>
 
-<StepItem title="5. Response Generation">
-The runtime collects results from function calls and component renders, then sends this context back to the LLM for the next turn of conversation.
+<StepItem title="5. extraAnalysis (selective data sharing)">
+Some function results may be safe to send back to the LLM. If a function is marked with `canShareDataWithLLM`, the runtime can build an `extraAnalysis` payload from those results (plus relevant context) and send it back through the proxy to improve the next LLM turn.
 </StepItem>
 </Step>
 
@@ -82,6 +90,7 @@ The AUTOUI runtime orchestrates plan execution. It:
 - Renders components with provided props
 - Manages conversation state and localStorage persistence
 - Enforces `maxSteps` limits to prevent infinite loops
+- Maintains an internal **context store** (key → value pairs) used during plan execution and follow-up turns
 
 ### Functions
 
@@ -105,7 +114,7 @@ AUTOUI uses a **proxy server** pattern for security:
 
 You have **two options** for the backend proxy:
 
-1. **Use AutoUI's hosted portal + proxy** (Recommended for quick start): Visit [autoui-chi.vercel.app](https://autoui-chi.vercel.app/) to register an app (you’ll paste your OpenRouter API key there). You’ll receive an `appId` and `sharedSecret`. By default, your frontend should use `https://autoui-proxy.onrender.com` as `llm.proxyUrl`.
+1. **Use AutoUI's hosted portal + proxy** (Recommended for quick start): Visit the **[AutoUI Service Portal](https://autoui-chi.vercel.app/)** to register an app (you’ll paste your OpenRouter API key there). You’ll receive an `appId` and `sharedSecret`. By default, your frontend should use `https://autoui-proxy.onrender.com` as `llm.proxyUrl`.
 
 2. **Self-Hosted Backend**: Copy the AutoUI backend repository and run your own proxy server. Connect to it via the `proxyUrl` in your config. See [Backend Proxy Installation](/docs/backend-proxy) for setup instructions.
 
@@ -133,14 +142,19 @@ You have **two options** for the backend proxy:
     participant App as YourApp_Functions_UI
 
     User->>ModalChat: Send message
-    ModalChat->>Proxy: Send message + appId + schema metadata
+    ModalChat->>Proxy: Send message + appId + sharedSecret + prompt/config + schema metadata
+    Proxy->>Proxy: Verify appId + sharedSecret (DB)
+    Proxy->>Proxy: Decrypt OpenRouter API key (stored encrypted)
     Proxy->>OpenRouter: Forward request (server-side OpenRouter key)
-    OpenRouter-->>Proxy: Return plan JSON
-    Proxy-->>Runtime: Return plan JSON
+    OpenRouter-->>Proxy: Return instructionPlan JSON
+    Proxy-->>Runtime: Return instructionPlan JSON
     Runtime->>Runtime: Validate plan (optional, schema-based)
+    Runtime->>Runtime: Execute plan engine + update context (key->value)
     Runtime->>App: Call functions / render components
     App-->>Runtime: Return results (data + UI state)
-    Runtime-->>ModalChat: Render assistant response + UI actions
+    Runtime->>Runtime: Build extraAnalysis (only canShareDataWithLLM results)
+    Runtime-->>Proxy: Send extraAnalysis (optional)
+    Runtime-->>ModalChat: Render UI updates + assistant response
   `} 
 />
 
@@ -164,14 +178,14 @@ You have **two options** for the backend proxy:
 │  (Your Backend) │ ◄─── OPENROUTER_API_KEY (server-side)
 └──────┬──────────┘
        │
-       │ Forwards to LLM
+       │ Verifies appId/sharedSecret, decrypts OpenRouter key, forwards to LLM
        ▼
 ┌─────────────────┐
 │  OpenRouter     │
 │  / LLM Provider │
 └──────┬──────────┘
        │
-       │ Returns Plan JSON
+       │ Returns instructionPlan JSON
        ▼
 ┌─────────────────┐
 │  Frontend       │
@@ -181,6 +195,8 @@ You have **two options** for the backend proxy:
        │ Executes plan:
        │ - callFunc(...)
        │ - renderComponent(...)
+       │ - updates context (key->value)
+       │ - builds extraAnalysis (optional)
        ▼
 ┌─────────────────┐
 │  Your App       │

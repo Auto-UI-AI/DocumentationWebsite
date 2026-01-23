@@ -26,6 +26,25 @@ The `@autoai-ui/autoui/plugin` exists to generate a **type-based runtime schema*
 With the schema + `runtime.validateLLMOutput: true`, AUTOUI can catch invalid params/props early instead of crashing your app.
 </Note>
 
+## Why this plugin is “cool” (vs manual runtime validation like Zod)
+
+Many “runtime-safe” libraries require you to **manually write schemas** (e.g. Zod) for every function params object and every component props object. That works, but it creates extra code and a second source of truth.
+
+AUTOUI’s plugin approach is different:
+
+- **TypeScript is the source of truth**: your real function signatures and component prop types drive validation.
+- **Less code to maintain**: you don’t have to hand-write validators for every callable/props shape.
+- **Fewer drift bugs**: schemas don’t silently fall out of sync with your TS types because they’re generated from them.
+- **Better DX**: you keep normal TS ergonomics and still get runtime validation when the LLM proposes params/props.
+
+## Limitations / tradeoffs (plugin cons)
+
+- **Build-time dependency**: schema generation happens at build/dev time, so it can add some overhead on larger projects.
+- **TypeScript-first**: the value is highest when your app is strongly typed (TS). Plain JS projects won’t benefit as much.
+- **Registration required**: if you forget to call `autouiRegisterFunctionParamsSchema(...)` / `autouiRegisterComponentPropsSchema(...)`, the plugin can’t “see” those items for schema generation.
+- **Generated file to manage**: you’ll typically commit `.autoui-runtime-schema.json`, and it will change when your types change (review it like any generated artifact).
+- **Not a security boundary**: validation helps prevent invalid plans/params/props, but you still need to design safe functions and enforce permissions in your app.
+
 ## The key functions (what they do)
 
 ### `autouiTypeSchemaPlugin()` (Vite plugin)

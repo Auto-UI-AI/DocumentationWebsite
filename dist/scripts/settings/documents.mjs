@@ -1,15 +1,11 @@
 export const Documents = [
     {
         heading: "Getting Started",
-        title: "Quick Start",
+        title: "Quick Start (React + Vite + TS)",
         href: "/quickstart",
         items: [
             {
-                title: "React",
-                href: "/react",
-            },
-            {
-                title: "Next.js",
+                title: "Next.js (in development)",
                 href: "/nextjs",
             },
             {
@@ -19,26 +15,24 @@ export const Documents = [
         ],
     },
     {
+        heading: "Concepts",
         title: "What is AUTOUI?",
         href: "/introduction",
     },
     {
-        title: "Getting Started with AutoUI",
-        href: "/getting-started",
+        title: "Why AUTOUI (and what the plugin does)",
+        href: "/why-autoui",
     },
     {
         title: "Complete Developer Guide",
         href: "/developer-guide",
     },
     {
-        title: "Quick Installation & Configuration",
-        href: "/installation",
-    },
-    {
         title: "Backend Proxy Installation & Configuration",
         href: "/backend-proxy",
     },
     {
+        heading: "Configuration",
         title: "Config Explanation",
         href: "/config",
         items: [
@@ -48,5 +42,10 @@ export const Documents = [
             { title: "functions & components", href: "/functions-and-components" },
             { title: "metadata", href: "/metadata" },
         ],
+    },
+    {
+        heading: "More",
+        title: "Future ideas (roadmap)",
+        href: "/roadmap",
     },
 ];
